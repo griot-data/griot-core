@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.9.2 (2026-03-08)
+
+### Bug Fixes
+
+- Gate PyPI release behind CI checks
+  ([`ef5225c`](https://github.com/griot-data/griot-core/commit/ef5225ce0b8e5af06d3088cef79bfcb28b7770e2))
+
+Release job now depends on lint, typecheck, and test jobs passing. CI workflow only runs on PRs,
+  release workflow runs on push to main with CI gates built in.
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+
+
 ## v0.9.1 (2026-03-08)
 
 ### Bug Fixes
@@ -13,6 +26,11 @@ Remove build_command from semantic-release config so it only handles versioning 
   hatchling.
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+
+### Chores
+
+- **release**: V0.9.1
+  ([`ef3aaf1`](https://github.com/griot-data/griot-core/commit/ef3aaf1e4f18cd444ae9127b584f315dc7438293))
 
 
 ## v0.9.0 (2026-03-08)

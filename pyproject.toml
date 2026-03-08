@@ -1,6 +1,6 @@
 [project]
 name = "griot-core"
-version = "0.9.1"
+version = "0.9.2"
 description = "Core library for Griot data contracts - schema validation, mock generation, and AI manifests"
 readme = "README.md"
 license = { text = "Apache-2.0" }
