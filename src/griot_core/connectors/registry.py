@@ -4,27 +4,29 @@ Connector registry for managing data source connectors.
 Provides a central registry for registering, discovering, and
 instantiating data connectors by type.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Type
 
 from .base import (
-    BaseConnector,
+    ConnectionTestResult,
     ConnectorConfig,
     ConnectorType,
-    ConnectionTestResult,
     DataConnector,
 )
 
 
 class ConnectorNotFoundError(Exception):
     """Raised when a connector type is not registered."""
+
     pass
 
 
 class ConnectorRegistrationError(Exception):
     """Raised when connector registration fails."""
+
     pass
 
 
@@ -43,6 +45,7 @@ class ConnectorInfo:
         supports_sampling: Whether the connector supports sampling
         supports_arrow_native: Whether the data source has native Arrow support
     """
+
     connector_type: ConnectorType
     connector_class: Type[DataConnector]
     name: str
@@ -205,16 +208,14 @@ class ConnectorRegistry:
                 missing.append(param)
 
         if missing:
-            raise ValueError(
-                f"Missing required parameters for {info.name}: {', '.join(missing)}"
-            )
+            raise ValueError(f"Missing required parameters for {info.name}: {', '.join(missing)}")
 
         # Use custom factory if provided
         if connector_type in self._factories:
             return self._factories[connector_type](config)
 
         # Default: instantiate the class with config
-        return info.connector_class(config)
+        return info.connector_class(config)  # type: ignore[call-arg]
 
     def create_from_dict(
         self,
@@ -243,8 +244,7 @@ class ConnectorRegistry:
         except ValueError:
             valid = [c.value for c in ConnectorType]
             raise ValueError(
-                f"Invalid connector type '{connector_type}'. "
-                f"Valid types: {', '.join(valid)}"
+                f"Invalid connector type '{connector_type}'. Valid types: {', '.join(valid)}"
             )
 
         config = ConnectorConfig(

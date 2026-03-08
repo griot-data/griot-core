@@ -4,6 +4,7 @@ Type definitions for orchestration.
 Defines the data structures used for job splitting, dispatching,
 and result aggregation in the orchestration layer.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -369,16 +370,12 @@ class AggregatedResult:
     @property
     def has_critical_failures(self) -> bool:
         """Whether any critical severity checks failed."""
-        return any(
-            not r.passed and r.severity == "critical" for r in self.check_results
-        )
+        return any(not r.passed and r.severity == "critical" for r in self.check_results)
 
     @property
     def has_warnings(self) -> bool:
         """Whether any warning severity checks failed."""
-        return any(
-            not r.passed and r.severity == "warning" for r in self.check_results
-        )
+        return any(not r.passed and r.severity == "warning" for r in self.check_results)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""

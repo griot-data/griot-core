@@ -4,10 +4,10 @@ Griot Core Exception Hierarchy
 Custom exceptions for the Griot data contract system.
 All exceptions inherit from GriotError base class.
 """
+
 from __future__ import annotations
 
-from typing import  Any
-
+from typing import Any
 
 __all__ = [
     "GriotError",

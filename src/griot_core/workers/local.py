@@ -4,6 +4,7 @@ Local worker for development and testing.
 Executes validation jobs in the local process, useful for
 development, testing, and debugging.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -12,18 +13,17 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+from griot_core.executors import ExecutorRegistry, ExecutorRuntime
 from griot_core.models import Contract
-from griot_core.parsing import parse_contract_yaml, parse_contract_json
+from griot_core.parsing import parse_contract_json, parse_contract_yaml
 from griot_core.validation import ValidationEngine, ValidationOptions
-from griot_core.executors import ExecutorRuntime, ExecutorRegistry
 
 from .base import (
+    JobPayload,
     Worker,
     WorkerConfig,
     WorkerResult,
     WorkerStatus,
-    JobPayload,
-    ContractFetcher,
 )
 
 
@@ -206,8 +206,12 @@ class LocalWorker(Worker):
             "contract_version": validation_result.contract_version,
             "profile_used": validation_result.profile_used,
             "mode": validation_result.mode.value if validation_result.mode else None,
-            "started_at": validation_result.started_at.isoformat() if validation_result.started_at else None,
-            "completed_at": validation_result.completed_at.isoformat() if validation_result.completed_at else None,
+            "started_at": validation_result.started_at.isoformat()
+            if validation_result.started_at
+            else None,
+            "completed_at": validation_result.completed_at.isoformat()
+            if validation_result.completed_at
+            else None,
             "duration_ms": validation_result.duration_ms,
             "errors": validation_result.errors,
             "schema_results": [

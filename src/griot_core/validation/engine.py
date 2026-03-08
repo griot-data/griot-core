@@ -9,6 +9,7 @@ It orchestrates the entire validation process:
 4. Execute checks via executor runtime
 5. Build and return results
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -16,23 +17,22 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol
 
+from griot_core.connectors.base import DataConnector
+from griot_core.executors.registry import ExecutorRegistry
+from griot_core.executors.runtime import ExecutorRuntime
 from griot_core.models import Contract, Schema
 from griot_core.models.enums import Runtime
 from griot_core.resolution import ContractResolver
-from griot_core.executors import ExecutorSpec
-from griot_core.executors.registry import ExecutorRegistry
-from griot_core.executors.runtime import ExecutorRuntime
-from griot_core.connectors.base import DataConnector
 
+from .profile import ProfileResolver, ResolvedCheck, ResolvedProfile
 from .result import (
-    ValidationResult,
-    SchemaValidationResult,
     CheckExecutionResult,
-    ValidationMode,
     CheckStatus,
+    SchemaValidationResult,
+    ValidationMode,
+    ValidationResult,
 )
-from .profile import ProfileResolver, ResolvedProfile, ResolvedCheck
-from .types import ValidationContext, ValidationOptions
+from .types import ValidationOptions
 
 
 class RegistryClient(Protocol):
@@ -215,8 +215,7 @@ class ValidationEngine:
 
         # Filter checks for this schema
         schema_checks = [
-            rc for rc in profile.checks
-            if rc.source == schema.id or rc.source == "contract"
+            rc for rc in profile.checks if rc.source == schema.id or rc.source == "contract"
         ]
 
         # Execute checks
@@ -230,14 +229,16 @@ class ValidationEngine:
 
             for i, check_result in enumerate(check_results):
                 if isinstance(check_result, Exception):
-                    result.add_result(CheckExecutionResult(
-                        check_name=schema_checks[i].check.name,
-                        status=CheckStatus.ERROR,
-                        severity=schema_checks[i].check.severity,
-                        error_message=str(check_result),
-                    ))
+                    result.add_result(
+                        CheckExecutionResult(
+                            check_name=schema_checks[i].check.name,
+                            status=CheckStatus.ERROR,
+                            severity=schema_checks[i].check.severity,
+                            error_message=str(check_result),
+                        )
+                    )
                 else:
-                    result.add_result(check_result)
+                    result.add_result(check_result)  # type: ignore[arg-type]
         else:
             # Run checks sequentially
             for resolved_check in schema_checks:
@@ -314,7 +315,9 @@ class ValidationEngine:
                 threshold=check_result.threshold,
                 operator=check_result.operator,
                 details=check_result.details,
-                samples=check_result.samples[:options.max_samples] if options.include_samples else [],
+                samples=check_result.samples[: options.max_samples]
+                if options.include_samples
+                else [],
                 error_message=check_result.error,
                 execution_time_ms=execution_time,
                 executor_id=executor_result.executor_id,

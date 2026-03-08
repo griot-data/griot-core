@@ -4,59 +4,60 @@ YAML parser for contracts and schemas.
 Parses YAML files into griot-core dataclasses following the
 Data Contract Protocol Specification.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import yaml
 
 from griot_core.models import (
+    ApprovalWorkflow,
+    AuditConfig,
+    AuthoritativeDefinition,
+    AutoCheckConfig,
+    Cardinality,
+    ChangeManagement,
+    Check,
+    CheckCategory,
+    CheckCondition,
+    CheckType,
+    ComplianceConfig,
     # Core models
     Contract,
-    Schema,
-    Property,
-    PropertyConstraints,
-    Relationship,
-    Check,
-    CheckCondition,
-    SchemaRef,
     # Contract configuration
     ContractDescription,
+    ContractStatus,
+    CrossBorderConfig,
+    DataSubjectRight,
+    DataSubjectRights,
     ExecutorConfig,
     ExecutorProfile,
-    AutoCheckConfig,
-    ComplianceConfig,
-    LegalConfig,
-    Regulation,
-    DataSubjectRights,
-    DataSubjectRight,
-    RetentionPolicy,
-    CrossBorderConfig,
-    AuditConfig,
     ExportControls,
-    SLAConfig,
     GovernanceConfig,
+    LegalConfig,
+    LogicalType,
+    MaskingStrategy,
+    PIIType,
+    Property,
+    PropertyConstraints,
+    Regulation,
+    Relationship,
+    RelationshipType,
+    RetentionPolicy,
     ReviewConfig,
-    ChangeManagement,
-    ApprovalWorkflow,
-    Server,
-    TeamConfig,
-    SupportChannel,
-    AuthoritativeDefinition,
+    Schema,
+    SchemaRef,
     # Enums
     SchemaStatus,
-    ContractStatus,
-    LogicalType,
-    PIIType,
-    MaskingStrategy,
     Sensitivity,
-    CheckCategory,
-    CheckType,
+    Server,
     Severity,
-    RelationshipType,
-    Cardinality,
+    SLAConfig,
+    SupportChannel,
+    TeamConfig,
 )
 
 
@@ -152,10 +153,12 @@ def _parse_contract_dict(data: Dict[str, Any]) -> Contract:
     if "schema" in data:
         for schema_item in data["schema"]:
             if "$ref" in schema_item:
-                schema_refs.append(SchemaRef(
-                    ref=schema_item["$ref"],
-                    version_pinned=schema_item.get("version_pinned", True),
-                ))
+                schema_refs.append(
+                    SchemaRef(  # type: ignore[call-arg]
+                        ref=schema_item["$ref"],
+                        version_pinned=schema_item.get("version_pinned", True),
+                    )
+                )
             else:
                 inline_schemas.append(_parse_schema_dict(schema_item))
 
@@ -189,13 +192,15 @@ def _parse_contract_dict(data: Dict[str, Any]) -> Contract:
     servers = []
     if "servers" in data:
         for server_data in data["servers"]:
-            servers.append(Server(
-                name=server_data.get("name", ""),
-                type=server_data.get("type", ""),
-                environment=server_data.get("environment", ""),
-                connection=server_data.get("connection", {}),
-                roles=server_data.get("roles", []),
-            ))
+            servers.append(
+                Server(
+                    name=server_data.get("name", ""),
+                    type=server_data.get("type", ""),
+                    environment=server_data.get("environment", ""),
+                    connection=server_data.get("connection", {}),
+                    roles=server_data.get("roles", []),
+                )
+            )
 
     # Parse team
     team = None
@@ -213,20 +218,24 @@ def _parse_contract_dict(data: Dict[str, Any]) -> Contract:
         support_data = data["support"]
         if "channels" in support_data:
             for channel in support_data["channels"]:
-                support.append(SupportChannel(
-                    type=channel.get("type", ""),
-                    contact=channel.get("contact", ""),
-                ))
+                support.append(
+                    SupportChannel(
+                        type=channel.get("type", ""),
+                        contact=channel.get("contact", ""),
+                    )
+                )
 
     # Parse authoritative definitions
     auth_defs = []
     if "authoritativeDefinitions" in data:
         for auth_def in data["authoritativeDefinitions"]:
-            auth_defs.append(AuthoritativeDefinition(
-                type=auth_def.get("type", ""),
-                url=auth_def.get("url", ""),
-                description=auth_def.get("description", ""),
-            ))
+            auth_defs.append(
+                AuthoritativeDefinition(
+                    type=auth_def.get("type", ""),
+                    url=auth_def.get("url", ""),
+                    description=auth_def.get("description", ""),
+                )
+            )
 
     return Contract(
         api_version=data.get("apiVersion", "v1.0.0"),
@@ -381,12 +390,14 @@ def _parse_property_dict(data: Dict[str, Any], ordinal: int = 0) -> Property:
                 except ValueError:
                     pass
 
-            relationships.append(Relationship(
-                to=rel_data.get("to", ""),
-                type=rel_type,
-                cardinality=cardinality,
-                description=rel_data.get("description", ""),
-            ))
+            relationships.append(
+                Relationship(
+                    to=rel_data.get("to", ""),
+                    type=rel_type,
+                    cardinality=cardinality,
+                    description=rel_data.get("description", ""),
+                )
+            )
 
     return Property(
         id=data.get("property_id", data.get("id", "")),
@@ -462,9 +473,9 @@ def _parse_executor_config(data: Dict[str, Any]) -> ExecutorConfig:
     # Parse auto checks
     auto_checks = AutoCheckConfig(
         enabled=auto_checks_data.get("enabled", True),
-        include=auto_checks_data.get("include", [
-            "nullable", "unique", "primary_key", "required", "pii_masking"
-        ]),
+        include=auto_checks_data.get(
+            "include", ["nullable", "unique", "primary_key", "required", "pii_masking"]
+        ),
         severity=Severity(auto_checks_data.get("severity", "critical")),
     )
 
@@ -496,12 +507,14 @@ def _parse_compliance_config(data: Dict[str, Any]) -> ComplianceConfig:
     legal_data = data.get("legal", {})
     regulations = []
     for reg_data in legal_data.get("regulations", []):
-        regulations.append(Regulation(
-            name=reg_data.get("name", ""),
-            applicable=reg_data.get("applicable", True),
-            articles=reg_data.get("articles", []),
-            documentation=reg_data.get("documentation", ""),
-        ))
+        regulations.append(
+            Regulation(
+                name=reg_data.get("name", ""),
+                applicable=reg_data.get("applicable", True),
+                articles=reg_data.get("articles", []),
+                documentation=reg_data.get("documentation", ""),
+            )
+        )
 
     legal = LegalConfig(
         jurisdiction=legal_data.get("jurisdiction", []),

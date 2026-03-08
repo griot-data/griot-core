@@ -5,22 +5,25 @@ Combines WASM and Container runtimes into a single interface
 that automatically selects the appropriate runtime based on
 executor specification and preferences.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from griot_core.models import Check
 from griot_core.models.enums import Runtime
-from .types import CheckResult, ExecutorSpec, ExecutorResult
-from .wasm_runtime import WasmRuntime, WasmExecutionResult
-from .container_runtime import ContainerRuntime, ContainerConfig, ContainerExecutionResult
+
+from .container_runtime import ContainerConfig, ContainerRuntime
+from .types import ExecutorResult, ExecutorSpec
+from .wasm_runtime import WasmRuntime
 
 
 @dataclass
 class RuntimeCapabilities:
     """Capabilities of the runtime environment."""
+
     wasm_available: bool
     container_available: bool
     container_runtime: Optional[str] = None  # "podman" or "docker"
@@ -95,7 +98,7 @@ class ExecutorRuntime:
                 runtime=Runtime.WASM,
             )
         else:
-            result = await self._container_runtime.execute(spec, check, arrow_data, timeout)
+            result = await self._container_runtime.execute(spec, check, arrow_data, timeout)  # type: ignore[assignment]
             return ExecutorResult(
                 check_result=result.check_result,
                 executor_id=spec.id,
@@ -146,7 +149,9 @@ class ExecutorRuntime:
         return RuntimeCapabilities(
             wasm_available=True,  # WASM is always available
             container_available=container_info["available"],
-            container_runtime=container_info.get("runtime") if container_info["available"] else None,
+            container_runtime=container_info.get("runtime")
+            if container_info["available"]
+            else None,
         )
 
     def is_runtime_available(self, runtime: Runtime) -> bool:

@@ -4,6 +4,7 @@ Generates ``_sources.yml``, ``_models.yml``, staging SQL stubs, and
 custom generic test macros from a Griot contract's schemas, field
 constraints, and quality checks.
 """
+
 from __future__ import annotations
 
 import json
@@ -14,12 +15,10 @@ from griot_core.models.enums import CheckCategory
 from griot_core.scaffold.codegen import to_snake_case
 from griot_core.scaffold.dbt_mapping import (
     CATEGORY_TO_DBT,
-    FUNCTION_TO_CATEGORY,
     severity_to_dbt,
     suggest_category,
 )
 from griot_core.scaffold.type_mapping import map_logical_type
-
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
@@ -101,27 +100,31 @@ class DbtArtifactGenerator:
         for schema in schemas:
             physical = schema.physical_name or to_snake_case(schema.name)
             leaf = physical.rsplit(".", 1)[-1]
-            fields_dict = schema.fields
 
             # Build column tests (deduped) from property flags + quality checks
             column_tests = self._collect_column_tests(schema)
 
-            sources_tables.append({
-                "name": leaf,
-                "description": getattr(schema, "description", ""),
-                "tags": getattr(schema, "tags", []),
-                "columns": column_tests,
-            })
+            sources_tables.append(
+                {
+                    "name": leaf,
+                    "description": getattr(schema, "description", ""),
+                    "tags": getattr(schema, "tags", []),
+                    "columns": column_tests,
+                }
+            )
 
-            models_entries.append({
-                "name": f"stg_{leaf}",
-                "description": f"Staging model for {leaf}",
-                "columns": column_tests,
-            })
+            models_entries.append(
+                {
+                    "name": f"stg_{leaf}",
+                    "description": f"Staging model for {leaf}",
+                    "columns": column_tests,
+                }
+            )
 
             # Staging SQL
             rendered[f"{base}/stg_{leaf}.sql"] = self._render_staging_sql(
-                schema, leaf,
+                schema,
+                leaf,
             )
 
         # _sources.yml
@@ -179,21 +182,24 @@ class DbtArtifactGenerator:
             if info.unique or info.primary_key:
                 _add_test(name, "unique")
             # Foreign key relationships
-            for rel in (info.relationships or []):
+            for rel in info.relationships or []:
                 if rel.get("type") == "foreignKey":
                     to_schema = rel.get("toSchema", "")
                     to_col = rel.get("to", "")
                     if to_schema and to_col:
                         ref_source = to_snake_case(to_schema)
-                        _add_test(name, {
-                            "relationships": {
-                                "to": f"source('{self._contract_snake}', '{ref_source}')",
-                                "field": to_col,
+                        _add_test(
+                            name,
+                            {
+                                "relationships": {
+                                    "to": f"source('{self._contract_snake}', '{ref_source}')",
+                                    "field": to_col,
+                                },
                             },
-                        })
+                        )
 
         # 2. Schema-level quality checks
-        for check_dict in (schema.quality or []):
+        for check_dict in schema.quality or []:
             self._process_quality_check(check_dict, column_tests, seen, _add_test)
 
         return column_tests
@@ -334,7 +340,13 @@ class DbtArtifactGenerator:
                 lines.append(f"        tags: [{tag_list}]")
 
             # Per-table loaded_at_field (only if freshness SLA is configured)
-            if sla and isinstance(sla, dict) and sla.get("freshness", {}).get("maxAge", sla.get("freshness", {}).get("max_age", "")):
+            if (
+                sla
+                and isinstance(sla, dict)
+                and sla.get("freshness", {}).get(
+                    "maxAge", sla.get("freshness", {}).get("max_age", "")
+                )
+            ):
                 if idx < len(schemas):
                     ts_field = _find_timestamp_field(schemas[idx].fields)
                     if ts_field:
@@ -342,7 +354,9 @@ class DbtArtifactGenerator:
 
             # Columns with tests
             col_tests = table.get("columns", {})
-            has_columns = any(tests for col, tests in col_tests.items() if col != "__table__" and tests)
+            has_columns = any(
+                tests for col, tests in col_tests.items() if col != "__table__" and tests
+            )
             if has_columns:
                 lines.append("        columns:")
                 for col_name, tests in col_tests.items():
@@ -358,7 +372,9 @@ class DbtArtifactGenerator:
                                 if isinstance(params, dict) and params:
                                     lines.append(f"              - {test_name}:")
                                     for pk, pv in params.items():
-                                        lines.append(f"                  {pk}: {self._yaml_value(pv)}")
+                                        lines.append(
+                                            f"                  {pk}: {self._yaml_value(pv)}"
+                                        )
                                 else:
                                     lines.append(f"              - {test_name}")
 
@@ -378,7 +394,9 @@ class DbtArtifactGenerator:
             lines.append(f'    description: "{model["description"]}"')
 
             col_tests = model.get("columns", {})
-            has_columns = any(tests for col, tests in col_tests.items() if col != "__table__" and tests)
+            has_columns = any(
+                tests for col, tests in col_tests.items() if col != "__table__" and tests
+            )
             if has_columns:
                 lines.append("    columns:")
                 for col_name, tests in col_tests.items():
@@ -452,10 +470,7 @@ class DbtArtifactGenerator:
     def _yaml_value(value: Any) -> str:
         """Format a value for inline YAML output."""
         if isinstance(value, list):
-            items = ", ".join(
-                f"'{v}'" if isinstance(v, str) else str(v)
-                for v in value
-            )
+            items = ", ".join(f"'{v}'" if isinstance(v, str) else str(v) for v in value)
             return f"[{items}]"
         if isinstance(value, bool):
             return str(value).lower()

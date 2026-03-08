@@ -4,6 +4,7 @@ Result aggregator for combining parallel execution results.
 The ResultAggregator collects results from WASM worker and container
 checks executed in parallel, combining them into a single AggregatedResult.
 """
+
 from __future__ import annotations
 
 import logging
@@ -235,7 +236,9 @@ class ResultAggregator:
 
         # Get contract info from split job
         contract_id = self.split_job.wasm_job.contract_id if self.split_job.wasm_job else ""
-        contract_version = self.split_job.wasm_job.contract_version if self.split_job.wasm_job else ""
+        contract_version = (
+            self.split_job.wasm_job.contract_version if self.split_job.wasm_job else ""
+        )
         profile = self.split_job.wasm_job.profile if self.split_job.wasm_job else "default"
 
         if not contract_id and self.split_job.container_jobs:
@@ -254,7 +257,9 @@ class ResultAggregator:
             failed_checks=failed_checks,
             check_results=check_results,
             wasm_execution_time_ms=wasm_execution_time,
-            container_execution_time_ms=container_execution_time if container_execution_time > 0 else None,
+            container_execution_time_ms=container_execution_time
+            if container_execution_time > 0
+            else None,
             total_execution_time_ms=total_time,
             started_at=self.started_at,
             completed_at=self.completed_at,

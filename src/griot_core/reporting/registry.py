@@ -5,6 +5,7 @@ Follows the ConnectorRegistry pattern from connectors/registry.py.
 Provides a central registry for registering, discovering, and
 instantiating tool results parsers by tool name.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -15,11 +16,13 @@ from .base import ToolResultsParser
 
 class ParserNotFoundError(Exception):
     """Raised when a parser for a tool is not registered."""
+
     pass
 
 
 class ParserRegistrationError(Exception):
     """Raised when parser registration fails."""
+
     pass
 
 
@@ -33,6 +36,7 @@ class ParserInfo:
         description: Description of the parser.
         file_patterns: File patterns this parser handles (e.g., ["run_results.json"]).
     """
+
     tool_name: str
     parser_class: Type
     description: str = ""
@@ -81,9 +85,7 @@ class ParserRegistry:
             ParserRegistrationError: If tool name already registered.
         """
         if tool_name in self._parsers:
-            raise ParserRegistrationError(
-                f"Parser for tool '{tool_name}' is already registered"
-            )
+            raise ParserRegistrationError(f"Parser for tool '{tool_name}' is already registered")
 
         info = ParserInfo(
             tool_name=tool_name,
@@ -117,8 +119,7 @@ class ParserRegistry:
         if tool_name not in self._parsers:
             available = ", ".join(self._parsers.keys()) or "(none)"
             raise ParserNotFoundError(
-                f"No parser registered for tool '{tool_name}'. "
-                f"Available parsers: {available}"
+                f"No parser registered for tool '{tool_name}'. Available parsers: {available}"
             )
 
         if tool_name in self._factories:

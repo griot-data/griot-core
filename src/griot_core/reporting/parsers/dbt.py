@@ -5,6 +5,7 @@ Parses dbt's target/run_results.json into a ToolValidationReport.
 This is the first built-in parser. Adding support for a new tool
 (Soda, Great Expectations, etc.) follows the same pattern.
 """
+
 from __future__ import annotations
 
 import json
@@ -75,8 +76,12 @@ class DbtResultsParser:
         parts = uid.split(".")
         if len(parts) < 4:
             return {
-                "project": "", "check_name": "", "table": "",
-                "column": None, "hash": "", "is_source_test": False,
+                "project": "",
+                "check_name": "",
+                "table": "",
+                "column": None,
+                "hash": "",
+                "is_source_test": False,
                 "schema_key": None,
             }
 
@@ -86,7 +91,7 @@ class DbtResultsParser:
         is_source = body.startswith("source_")
 
         # Strip source_ prefix
-        remainder = body[len("source_"):] if is_source else body
+        remainder = body[len("source_") :] if is_source else body
 
         # Extract check_name by matching known test type prefixes
         check_name = ""
@@ -94,14 +99,14 @@ class DbtResultsParser:
         for ct in KNOWN_TEST_TYPES:
             if remainder.startswith(ct + "_") or remainder == ct:
                 check_name = ct
-                after_check = remainder[len(ct) + 1:] if len(remainder) > len(ct) else ""
+                after_check = remainder[len(ct) + 1 :] if len(remainder) > len(ct) else ""
                 break
         if not check_name:
             # Fallback: take the first token
             first_underscore = remainder.find("_")
             if first_underscore > 0:
                 check_name = remainder[:first_underscore]
-                after_check = remainder[first_underscore + 1:]
+                after_check = remainder[first_underscore + 1 :]
             else:
                 check_name = remainder
                 after_check = ""
@@ -132,7 +137,7 @@ class DbtResultsParser:
                 ac_lower = after_check.lower()
                 idx = ac_lower.find(table_lower)
                 if idx >= 0:
-                    suffix = after_check[idx + len(table_lower):]
+                    suffix = after_check[idx + len(table_lower) :]
                     suffix = suffix.lstrip("_")
                     if suffix:
                         column = suffix
@@ -165,9 +170,7 @@ class DbtResultsParser:
         """
         results_path = Path(results_path)
         if not results_path.exists():
-            raise FileNotFoundError(
-                f"{results_path} not found. Run 'dbt build' first."
-            )
+            raise FileNotFoundError(f"{results_path} not found. Run 'dbt build' first.")
 
         with open(results_path) as f:
             try:
@@ -278,7 +281,9 @@ class DbtResultsParser:
 
             # Only attach compiled SQL for failures/errors to keep payload compact
             if status in ("fail", "error"):
-                compiled = result.get("compiled_code") or result.get("node", {}).get("compiled_code")
+                compiled = result.get("compiled_code") or result.get("node", {}).get(
+                    "compiled_code"
+                )
                 if compiled:
                     check_result.compiled_code = compiled
                 if message:
@@ -337,11 +342,7 @@ class DbtResultsParser:
 
                 # Collect column names for this table
                 props = getattr(schema, "properties", [])
-                col_names = [
-                    getattr(p, "name", "")
-                    for p in props
-                    if getattr(p, "name", "")
-                ]
+                col_names = [getattr(p, "name", "") for p in props if getattr(p, "name", "")]
                 if col_names:
                     column_names[table_name] = col_names
 

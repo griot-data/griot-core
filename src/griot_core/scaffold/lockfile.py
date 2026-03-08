@@ -16,6 +16,7 @@ File format (YAML)::
         path: contracts/customer-churn.yaml
         pulled_at: "2026-02-07T10:30:00Z"
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -26,8 +27,8 @@ from typing import Any
 
 import yaml
 
-
 # -- Data classes -------------------------------------------------------------
+
 
 @dataclass
 class LockEntry:
@@ -50,6 +51,7 @@ class LockData:
 
 # -- Helpers ------------------------------------------------------------------
 
+
 def compute_checksum(content: str) -> str:
     """Return ``sha256:<hex>`` checksum for *content*.
 
@@ -62,6 +64,7 @@ def compute_checksum(content: str) -> str:
 
 
 # -- Public API ---------------------------------------------------------------
+
 
 def write_lock(
     contract_id: str,
@@ -100,12 +103,10 @@ def write_lock(
     lock_data.contracts[contract_id] = entry
 
     # Serialise and write
-    raw: dict[str, Any] = {
-        "contracts": {
-            cid: asdict(e) for cid, e in lock_data.contracts.items()
-        }
-    }
-    lock_path.write_text(yaml.safe_dump(raw, default_flow_style=False, sort_keys=False), encoding="utf-8")
+    raw: dict[str, Any] = {"contracts": {cid: asdict(e) for cid, e in lock_data.contracts.items()}}
+    lock_path.write_text(
+        yaml.safe_dump(raw, default_flow_style=False, sort_keys=False), encoding="utf-8"
+    )
     return lock_path
 
 
@@ -169,10 +170,12 @@ def verify_lock(
         candidates: list[Path] = []
         if entry.path:
             candidates.append(Path(entry.path))
-        candidates.extend([
-            contracts_dir / f"{cid}.yaml",
-            contracts_dir / f"{cid}.yml",
-        ])
+        candidates.extend(
+            [
+                contracts_dir / f"{cid}.yaml",
+                contracts_dir / f"{cid}.yml",
+            ]
+        )
 
         found = False
         for candidate in candidates:

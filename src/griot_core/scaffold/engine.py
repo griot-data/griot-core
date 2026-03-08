@@ -4,6 +4,7 @@ Loads templates from the ``templates/`` package directory, registers
 custom filters, and provides the main ``scaffold_contract()`` entry
 point used by the CLI.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -14,7 +15,6 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from griot_core.scaffold.codegen import to_pascal_case, to_snake_case
 from griot_core.scaffold.type_mapping import map_logical_type, map_to_python_type
-
 
 # ── Template directory ───────────────────────────────────────────────
 
@@ -29,6 +29,7 @@ _ORCHESTRATOR_TEMPLATES: dict[str, str] = {
 
 
 # ── Engine ───────────────────────────────────────────────────────────
+
 
 class TemplateEngine:
     """Jinja2 template engine for scaffold code generation."""
@@ -73,20 +74,22 @@ def _build_field_context(
     for field_info in fields_dict.values():
         rels = field_info.relationships if hasattr(field_info, "relationships") else []
         fk_ref = _build_fk_ref(rels) if rels else None
-        result.append({
-            "name": field_info.name,
-            "snake_name": to_snake_case(field_info.name),
-            "logical_type": field_info.logical_type,
-            "sql_type": map_logical_type(field_info.logical_type, target),
-            "python_type": map_to_python_type(field_info.logical_type),
-            "description": field_info.description,
-            "primary_key": field_info.primary_key,
-            "required": field_info.required,
-            "unique": field_info.unique,
-            "nullable": field_info.nullable,
-            "foreign_key": bool(fk_ref),
-            "fk_references": fk_ref,
-        })
+        result.append(
+            {
+                "name": field_info.name,
+                "snake_name": to_snake_case(field_info.name),
+                "logical_type": field_info.logical_type,
+                "sql_type": map_logical_type(field_info.logical_type, target),
+                "python_type": map_to_python_type(field_info.logical_type),
+                "description": field_info.description,
+                "primary_key": field_info.primary_key,
+                "required": field_info.required,
+                "unique": field_info.unique,
+                "nullable": field_info.nullable,
+                "foreign_key": bool(fk_ref),
+                "fk_references": fk_ref,
+            }
+        )
     return result
 
 
@@ -114,8 +117,13 @@ def _build_schema_context(
         "fields": field_ctx,
         "primary_keys": [f["name"] for f in field_ctx if f["primary_key"]],
         "foreign_keys": [
-            {"column": f["name"], "ref_table": f["fk_references"]["schema"], "ref_column": f["fk_references"]["property"]}
-            for f in field_ctx if f.get("fk_references")
+            {
+                "column": f["name"],
+                "ref_table": f["fk_references"]["schema"],
+                "ref_column": f["fk_references"]["property"],
+            }
+            for f in field_ctx
+            if f.get("fk_references")
         ],
         "partition_keys": [],
         "field_comments": any(f["description"] for f in field_ctx),
@@ -188,7 +196,8 @@ def scaffold_contract(
             "components": ["config"],
         }
         rendered[".griot/config.yaml"] = engine.render_template(
-            "config.yaml.j2", config_ctx,
+            "config.yaml.j2",
+            config_ctx,
         )
         return rendered
 
@@ -243,6 +252,7 @@ def scaffold_contract(
             rendered[f"ddl/{contract_snake}.sql"] = engine.render_template(tmpl_path, common_ctx)
         except Exception:
             from griot_core.scaffold.codegen import generate_ddl
+
             rendered[f"ddl/{contract_snake}.sql"] = generate_ddl(contract, target, database)
 
     if "pipeline" in all_components and orchestrator != "none":
@@ -251,8 +261,8 @@ def scaffold_contract(
             tmpl_path = f"orchestrators/{orchestrator}/{tmpl_name}"
             real_name = tmpl_name.removesuffix(".j2")
             ext = real_name.rsplit(".", 1)[-1] if "." in real_name else "py"
-            rendered[f"pipeline/{contract_snake}_{orchestrator}.{ext}"] = (
-                engine.render_template(tmpl_path, common_ctx)
+            rendered[f"pipeline/{contract_snake}_{orchestrator}.{ext}"] = engine.render_template(
+                tmpl_path, common_ctx
             )
 
     if "tests" in all_components:
@@ -261,13 +271,11 @@ def scaffold_contract(
         )
 
     if "ci" in all_components and ci_provider != "none":
-        rendered[f".github/workflows/{contract_snake}_validate.yml"] = (
-            engine.render_template(f"ci/{ci_provider}.yml.j2", common_ctx)
+        rendered[f".github/workflows/{contract_snake}_validate.yml"] = engine.render_template(
+            f"ci/{ci_provider}.yml.j2", common_ctx
         )
 
     if "config" in all_components:
-        rendered[".griot/config.yaml"] = engine.render_template(
-            "config.yaml.j2", common_ctx
-        )
+        rendered[".griot/config.yaml"] = engine.render_template("config.yaml.j2", common_ctx)
 
     return rendered

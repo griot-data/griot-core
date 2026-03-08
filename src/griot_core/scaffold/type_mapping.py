@@ -4,6 +4,7 @@ Maps ``DataType`` values from griot-core to concrete SQL column types
 for each supported target warehouse / database, as well as Python type
 hints for model code generation.
 """
+
 from __future__ import annotations
 
 from griot_core.types import DataType
@@ -162,6 +163,7 @@ PYTHON_TYPE_MAPPINGS: dict[DataType, str] = {
 
 # ── Public helpers ───────────────────────────────────────────────────
 
+
 def map_logical_type(logical_type: str | DataType, target: str) -> str:
     """Map a logical type to a SQL column type for the given target.
 
@@ -178,8 +180,7 @@ def map_logical_type(logical_type: str | DataType, target: str) -> str:
     target = target.lower()
     if target not in TYPE_MAPPINGS:
         raise ValueError(
-            f"Unsupported target '{target}'. "
-            f"Supported: {', '.join(sorted(TYPE_MAPPINGS))}"
+            f"Unsupported target '{target}'. Supported: {', '.join(sorted(TYPE_MAPPINGS))}"
         )
 
     if isinstance(logical_type, str):

@@ -14,18 +14,19 @@ New approach (Native pods):
                              -> K8s Pod (container check A)
                              -> K8s Pod (container check B)
 """
+
 from griot_core.orchestration.dispatcher.base import (
     ComputeBackend,
     ComputeDispatcher,
     DispatcherConfig,
 )
+from griot_core.orchestration.dispatcher.cloudrun import CloudRunDispatcher
 from griot_core.orchestration.dispatcher.factory import (
     create_dispatcher,
     create_dispatcher_from_dict,
 )
 from griot_core.orchestration.dispatcher.kubernetes import KubernetesDispatcher
 from griot_core.orchestration.dispatcher.lambda_dispatcher import LambdaDispatcher
-from griot_core.orchestration.dispatcher.cloudrun import CloudRunDispatcher
 from griot_core.orchestration.dispatcher.local import LocalDispatcher
 
 __all__ = [

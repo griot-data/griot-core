@@ -4,6 +4,7 @@ Enforces that schema and property changes are only allowed when a
 contract is in DRAFT status.  Any attempt to modify schema data on a
 non-draft contract should be rejected.
 """
+
 from __future__ import annotations
 
 from griot_core.exceptions import GriotError

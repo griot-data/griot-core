@@ -4,17 +4,19 @@ Griot Core Contract
 Data contract definition and manipulation based on the Open Data Contract Standard (ODCS).
 A GriotContract contains contract-level metadata and one or more schema definitions.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterator
 
 import yaml
 
 from griot_core.exceptions import ContractNotFoundError, ContractParseError
-from griot_core.types import ContractStatus, Severity
 from griot_core.models.schema_ref import SchemaRef
+from griot_core.types import ContractStatus, Severity
 
 if TYPE_CHECKING:
     from griot_core.schema import Schema
@@ -143,15 +145,17 @@ CONTRACT_FIELD_TYPES: dict[str, type] = {
     "contract_created_ts": str,
 }
 
-ODCS_MANDATORY_FIELDS = frozenset({
-    "api_version",
-    "kind",
-    "id",
-    "version",
-    "status",
-    "schema",
-    "custom_properties",
-})
+ODCS_MANDATORY_FIELDS = frozenset(
+    {
+        "api_version",
+        "kind",
+        "id",
+        "version",
+        "status",
+        "schema",
+        "custom_properties",
+    }
+)
 
 
 # =============================================================================
@@ -595,11 +599,11 @@ class Contract:
 
         self.sla_properties: list[SLAProperty] = []
         if sla_properties:
-            for sla in sla_properties:
+            for sla in sla_properties:  # type: ignore[assignment]
                 if isinstance(sla, SLAProperty):
                     self.sla_properties.append(sla)
                 else:
-                    self.sla_properties.append(SLAProperty.from_dict(sla))
+                    self.sla_properties.append(SLAProperty.from_dict(sla))  # type: ignore[arg-type]
 
         self.support: list[ContractSupport] = []
         if support:
@@ -728,7 +732,7 @@ class Contract:
             "id": self.id,
             "name": self.name,
             "version": self.version,
-            "status": self.status.value if hasattr(self.status, 'value') else str(self.status),
+            "status": self.status.value if hasattr(self.status, "value") else str(self.status),
         }
 
         # Registry metadata
@@ -846,6 +850,7 @@ class Contract:
             include_metadata: Include registry metadata (uuid, timestamps, etc.)
         """
         print(self.to_yaml(include_metadata=include_metadata))
+
     # -------------------------------------------------------------------------
     # Class Methods for Loading
     # -------------------------------------------------------------------------
@@ -860,7 +865,6 @@ class Contract:
 
         Handles hydrated schemas (with _ref metadata) and schema references.
         """
-        from griot_core.schema import Schema
 
         # Preserve certain fields before normalization (keep original format)
         preserved_fields = {}
@@ -889,11 +893,10 @@ class Contract:
         return cls(
             # Identity
             api_version=data.get("api_version", "v1.0.0"),
-            id=data.get("id"),
+            id=data.get("id"),  # type: ignore[arg-type]
             name=data.get("name", ""),
             version=data.get("version", "1.0.0"),
             status=data.get("status", "draft"),
-
             # Registry metadata
             uuid=data.get("uuid"),
             extends=data.get("extends"),
@@ -902,30 +905,24 @@ class Contract:
             template_category=data.get("template_category"),
             owner_team_id=data.get("owner_team_id"),
             created_by=data.get("created_by"),
-
             # Contract-level checks (new format)
             checks=data.get("checks", []),
-
             # Structured configs (new format)
             compliance=data.get("compliance"),
             sla=data.get("sla"),
             executors=data.get("executors") or data.get("executor_config"),
             governance=data.get("governance"),
-
             # Reviewer info
             reviewer_type=data.get("reviewer_type"),
             reviewer_id=data.get("reviewer_id"),
             reviewer_name=data.get("reviewer_name"),
-
             # Resolution metadata
             resolved_definition=data.get("resolved_definition"),
             inheritance_chain=data.get("inheritance_chain", []),
             yaml_source=data.get("yaml_source"),
-
             # Timestamps
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
-
             # Old ODCS fields
             domain=data.get("domain", ""),
             data_product=data.get("data_product", ""),
@@ -938,7 +935,6 @@ class Contract:
             support=data.get("support", []),
             authoritative_definitions=data.get("authoritative_definitions", []),
             custom_properties=data.get("custom_properties", {}),
-
             # Schemas
             schemas=schemas if schemas else None,
             schema_refs=schema_refs if schema_refs else None,
@@ -968,10 +964,12 @@ class Contract:
                 if "_ref" in s:
                     # Extract schema ref from _ref
                     ref_data = s["_ref"]
-                    schema_refs.append(SchemaRef(
-                        schema_id=ref_data.get("schema_id") or ref_data.get("schemaId"),
-                        version=ref_data.get("version"),
-                    ))
+                    schema_refs.append(
+                        SchemaRef(
+                            schema_id=ref_data.get("schema_id") or ref_data.get("schemaId"),
+                            version=ref_data.get("version"),
+                        )
+                    )
                     # Also parse as inline schema for immediate use
                     schemas.append(Schema.from_dict(s))
                 # Check if this is a schema reference
@@ -1070,6 +1068,7 @@ def contract_to_dict(contract: Contract, camel_case: bool = True) -> dict[str, A
 @dataclass
 class LintIssue:
     """Contract quality issue."""
+
     code: str
     field: str | None
     message: str
@@ -1113,100 +1112,136 @@ def lint_contract(contract: Contract) -> list[LintIssue]:
     # -- Contract-level checks -----------------------------------------------
 
     if not contract.id:
-        issues.append(LintIssue(
-            code="ODCS-001", field=None,
-            message="Contract is missing required 'id' field",
-            severity=Severity.ERROR,
-            suggestion="Add a unique identifier",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-001",
+                field=None,
+                message="Contract is missing required 'id' field",
+                severity=Severity.ERROR,
+                suggestion="Add a unique identifier",
+            )
+        )
 
     if contract.status not in ContractStatus:
-        issues.append(LintIssue(
-            code="ODCS-002", field=None,
-            message=f"Contract has invalid status: {contract.status}",
-            severity=Severity.ERROR,
-            suggestion="Use: draft, active, deprecated, or retired",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-002",
+                field=None,
+                message=f"Contract has invalid status: {contract.status}",
+                severity=Severity.ERROR,
+                suggestion="Use: draft, active, deprecated, or retired",
+            )
+        )
 
     if not contract.schemas and not contract.has_schema_refs:
-        issues.append(LintIssue(
-            code="ODCS-003", field=None,
-            message="Contract has no schemas or schema references",
-            severity=Severity.ERROR,
-            suggestion="Add at least one schema to the contract",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-003",
+                field=None,
+                message="Contract has no schemas or schema references",
+                severity=Severity.ERROR,
+                suggestion="Add at least one schema to the contract",
+            )
+        )
 
     if not contract.name:
-        issues.append(LintIssue(
-            code="ODCS-004", field=None,
-            message="Contract is missing a 'name'",
-            severity=Severity.WARNING,
-            suggestion="Add a human-readable name",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-004",
+                field=None,
+                message="Contract is missing a 'name'",
+                severity=Severity.WARNING,
+                suggestion="Add a human-readable name",
+            )
+        )
 
     if not contract.version:
-        issues.append(LintIssue(
-            code="ODCS-005", field=None,
-            message="Contract is missing a 'version'",
-            severity=Severity.WARNING,
-            suggestion="Add a semantic version (e.g. '1.0.0')",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-005",
+                field=None,
+                message="Contract is missing a 'version'",
+                severity=Severity.WARNING,
+                suggestion="Add a semantic version (e.g. '1.0.0')",
+            )
+        )
 
     desc = contract.description
     if not desc or not getattr(desc, "purpose", None):
-        issues.append(LintIssue(
-            code="ODCS-006", field=None,
-            message="Contract is missing description.purpose",
-            severity=Severity.WARNING,
-            suggestion="Add a purpose explaining why this contract exists",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-006",
+                field=None,
+                message="Contract is missing description.purpose",
+                severity=Severity.WARNING,
+                suggestion="Add a purpose explaining why this contract exists",
+            )
+        )
 
     if not contract.data_product and not contract.domain:
-        issues.append(LintIssue(
-            code="ODCS-007", field=None,
-            message="Contract is missing a 'domain' or 'dataProduct'",
-            severity=Severity.INFO,
-            suggestion="Specify the domain or data product this contract belongs to",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-007",
+                field=None,
+                message="Contract is missing a 'domain' or 'dataProduct'",
+                severity=Severity.INFO,
+                suggestion="Specify the domain or data product this contract belongs to",
+            )
+        )
 
     if not contract.compliance:
-        issues.append(LintIssue(
-            code="ODCS-008", field=None,
-            message="Contract has no 'compliance' section",
-            severity=Severity.INFO,
-            suggestion="Add compliance with legal, retention, and classification",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-008",
+                field=None,
+                message="Contract has no 'compliance' section",
+                severity=Severity.INFO,
+                suggestion="Add compliance with legal, retention, and classification",
+            )
+        )
 
     if not contract.sla:
-        issues.append(LintIssue(
-            code="ODCS-009", field=None,
-            message="Contract has no 'sla' section",
-            severity=Severity.INFO,
-            suggestion="Add SLA with freshness and availability targets",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-009",
+                field=None,
+                message="Contract has no 'sla' section",
+                severity=Severity.INFO,
+                suggestion="Add SLA with freshness and availability targets",
+            )
+        )
 
     if not contract.governance:
-        issues.append(LintIssue(
-            code="ODCS-010", field=None,
-            message="Contract has no 'governance' section",
-            severity=Severity.INFO,
-            suggestion="Add governance with data_producer and data_consumer",
-        ))
+        issues.append(
+            LintIssue(
+                code="ODCS-010",
+                field=None,
+                message="Contract has no 'governance' section",
+                severity=Severity.INFO,
+                suggestion="Add governance with data_producer and data_consumer",
+            )
+        )
     else:
         if not contract.governance.get("data_producer"):
-            issues.append(LintIssue(
-                code="ODCS-011", field=None,
-                message="Governance is missing 'data_producer'",
-                severity=Severity.WARNING,
-                suggestion="Specify who produces this data",
-            ))
+            issues.append(
+                LintIssue(
+                    code="ODCS-011",
+                    field=None,
+                    message="Governance is missing 'data_producer'",
+                    severity=Severity.WARNING,
+                    suggestion="Specify who produces this data",
+                )
+            )
         if not contract.governance.get("data_consumer"):
-            issues.append(LintIssue(
-                code="ODCS-012", field=None,
-                message="Governance is missing 'data_consumer'",
-                severity=Severity.WARNING,
-                suggestion="Specify who consumes this data",
-            ))
+            issues.append(
+                LintIssue(
+                    code="ODCS-012",
+                    field=None,
+                    message="Governance is missing 'data_consumer'",
+                    severity=Severity.WARNING,
+                    suggestion="Specify who consumes this data",
+                )
+            )
 
     # Skip inline schema validation when using only schema_refs
     if contract.has_schema_refs and not contract.schemas:
@@ -1218,48 +1253,63 @@ def lint_contract(contract: Contract) -> list[LintIssue]:
         s_prefix = f"schema[{idx}]"
 
         if not schema.name:
-            issues.append(LintIssue(
-                code="SCH-001", field=s_prefix,
-                message=f"Schema at index {idx} is missing a 'name'",
-                severity=Severity.ERROR,
-                suggestion="Add a name to the schema",
-            ))
+            issues.append(
+                LintIssue(
+                    code="SCH-001",
+                    field=s_prefix,
+                    message=f"Schema at index {idx} is missing a 'name'",
+                    severity=Severity.ERROR,
+                    suggestion="Add a name to the schema",
+                )
+            )
 
         if not (schema.physical_name or ""):
-            issues.append(LintIssue(
-                code="SCH-002", field=s_prefix,
-                message=f"Schema '{schema.name}' is missing 'physicalName'",
-                severity=Severity.WARNING,
-                suggestion="Add a physicalName (e.g. 'analytics.dim_customers')",
-            ))
+            issues.append(
+                LintIssue(
+                    code="SCH-002",
+                    field=s_prefix,
+                    message=f"Schema '{schema.name}' is missing 'physicalName'",
+                    severity=Severity.WARNING,
+                    suggestion="Add a physicalName (e.g. 'analytics.dim_customers')",
+                )
+            )
 
         fields = schema.fields
         if not fields:
-            issues.append(LintIssue(
-                code="SCH-003", field=s_prefix,
-                message=f"Schema '{schema.name}' has no properties defined",
-                severity=Severity.ERROR,
-                suggestion="Add at least one property to the schema",
-            ))
+            issues.append(
+                LintIssue(
+                    code="SCH-003",
+                    field=s_prefix,
+                    message=f"Schema '{schema.name}' has no properties defined",
+                    severity=Severity.ERROR,
+                    suggestion="Add at least one property to the schema",
+                )
+            )
             continue
 
         has_pk = any(f.primary_key for f in fields.values())
         if not has_pk:
-            issues.append(LintIssue(
-                code="SCH-005", field=s_prefix,
-                message=f"Schema '{schema.name}' has no primary key",
-                severity=Severity.WARNING,
-                suggestion="Mark at least one property with is_primary_key: true",
-            ))
+            issues.append(
+                LintIssue(
+                    code="SCH-005",
+                    field=s_prefix,
+                    message=f"Schema '{schema.name}' has no primary key",
+                    severity=Severity.WARNING,
+                    suggestion="Mark at least one property with is_primary_key: true",
+                )
+            )
 
         checks = schema.quality or []
         if not checks:
-            issues.append(LintIssue(
-                code="SCH-004", field=s_prefix,
-                message=f"Schema '{schema.name}' has no checks defined",
-                severity=Severity.WARNING,
-                suggestion="Add quality checks (completeness, uniqueness, etc.)",
-            ))
+            issues.append(
+                LintIssue(
+                    code="SCH-004",
+                    field=s_prefix,
+                    message=f"Schema '{schema.name}' has no checks defined",
+                    severity=Severity.WARNING,
+                    suggestion="Add quality checks (completeness, uniqueness, etc.)",
+                )
+            )
 
         # -- Property-level checks -------------------------------------------
 
@@ -1267,36 +1317,48 @@ def lint_contract(contract: Contract) -> list[LintIssue]:
             f_prefix = f"{schema.name}.{field_name}"
 
             if not field_info.description:
-                issues.append(LintIssue(
-                    code="PROP-001", field=f_prefix,
-                    message=f"Property '{field_name}' has no description",
-                    severity=Severity.WARNING,
-                    suggestion="Add a description explaining this field",
-                ))
+                issues.append(
+                    LintIssue(
+                        code="PROP-001",
+                        field=f_prefix,
+                        message=f"Property '{field_name}' has no description",
+                        severity=Severity.WARNING,
+                        suggestion="Add a description explaining this field",
+                    )
+                )
 
             if not field_info.logical_type:
-                issues.append(LintIssue(
-                    code="PROP-002", field=f_prefix,
-                    message=f"Property '{field_name}' has no logical_type",
-                    severity=Severity.WARNING,
-                    suggestion="Specify logical_type (string, integer, date, etc.)",
-                ))
+                issues.append(
+                    LintIssue(
+                        code="PROP-002",
+                        field=f_prefix,
+                        message=f"Property '{field_name}' has no logical_type",
+                        severity=Severity.WARNING,
+                        suggestion="Specify logical_type (string, integer, date, etc.)",
+                    )
+                )
 
             privacy = field_info.custom_properties.get("privacy") or {}
             if privacy.get("is_pii") and not privacy.get("pii_type"):
-                issues.append(LintIssue(
-                    code="PROP-003", field=f_prefix,
-                    message=f"PII field '{field_name}' is missing 'pii_type'",
-                    severity=Severity.WARNING,
-                    suggestion="Specify pii_type (name, email, phone, etc.)",
-                ))
+                issues.append(
+                    LintIssue(
+                        code="PROP-003",
+                        field=f_prefix,
+                        message=f"PII field '{field_name}' is missing 'pii_type'",
+                        severity=Severity.WARNING,
+                        suggestion="Specify pii_type (name, email, phone, etc.)",
+                    )
+                )
             if privacy.get("is_pii") and not privacy.get("masking_strategy"):
-                issues.append(LintIssue(
-                    code="PROP-004", field=f_prefix,
-                    message=f"PII field '{field_name}' has no masking_strategy",
-                    severity=Severity.INFO,
-                    suggestion="Consider adding a masking strategy for PII data",
-                ))
+                issues.append(
+                    LintIssue(
+                        code="PROP-004",
+                        field=f_prefix,
+                        message=f"PII field '{field_name}' has no masking_strategy",
+                        severity=Severity.INFO,
+                        suggestion="Consider adding a masking strategy for PII data",
+                    )
+                )
 
     return issues
 
@@ -1349,7 +1411,9 @@ class ContractStructureResult:
     def summary(self) -> str:
         """Return human-readable summary."""
         status = "VALID" if self.is_valid else "INVALID"
-        return f"Contract structure {status}: {self.error_count} errors, {self.warning_count} warnings"
+        return (
+            f"Contract structure {status}: {self.error_count} errors, {self.warning_count} warnings"
+        )
 
 
 def validate_contract_structure(contract: Contract) -> ContractStructureResult:
@@ -1363,63 +1427,75 @@ def validate_contract_structure(contract: Contract) -> ContractStructureResult:
     issues: list[ContractStructureIssue] = []
 
     if not contract.id:
-        issues.append(ContractStructureIssue(
-            code="CS-001",
-            path="$.id",
-            message="Contract is missing required 'id' field",
-            severity=Severity.ERROR,
-            suggestion="Add a unique identifier to the contract",
-        ))
+        issues.append(
+            ContractStructureIssue(
+                code="CS-001",
+                path="$.id",
+                message="Contract is missing required 'id' field",
+                severity=Severity.ERROR,
+                suggestion="Add a unique identifier to the contract",
+            )
+        )
 
     if not contract.version:
-        issues.append(ContractStructureIssue(
-            code="CS-002",
-            path="$.version",
-            message="Contract is missing required 'version' field",
-            severity=Severity.ERROR,
-            suggestion="Add a semantic version (e.g., '1.0.0')",
-        ))
+        issues.append(
+            ContractStructureIssue(
+                code="CS-002",
+                path="$.version",
+                message="Contract is missing required 'version' field",
+                severity=Severity.ERROR,
+                suggestion="Add a semantic version (e.g., '1.0.0')",
+            )
+        )
 
     if contract.status not in ContractStatus:
-        issues.append(ContractStructureIssue(
-            code="CS-003",
-            path="$.status",
-            message=f"Invalid contract status: {contract.status}",
-            severity=Severity.ERROR,
-            suggestion="Use: draft, active, deprecated, or retired",
-        ))
+        issues.append(
+            ContractStructureIssue(
+                code="CS-003",
+                path="$.status",
+                message=f"Invalid contract status: {contract.status}",
+                severity=Severity.ERROR,
+                suggestion="Use: draft, active, deprecated, or retired",
+            )
+        )
 
     if not contract.name:
-        issues.append(ContractStructureIssue(
-            code="CS-004",
-            path="$.name",
-            message="Contract is missing a name",
-            severity=Severity.WARNING,
-            suggestion="Add a human-readable name",
-        ))
+        issues.append(
+            ContractStructureIssue(
+                code="CS-004",
+                path="$.name",
+                message="Contract is missing a name",
+                severity=Severity.WARNING,
+                suggestion="Add a human-readable name",
+            )
+        )
 
     # Check for schemas OR schema_refs
     if not contract.schemas and not contract.has_schema_refs:
-        issues.append(ContractStructureIssue(
-            code="CS-010",
-            path="$.schema",
-            message="Contract has no schemas or schema references defined",
-            severity=Severity.ERROR,
-            suggestion="Add at least one schema or schema_ref to the contract",
-        ))
+        issues.append(
+            ContractStructureIssue(
+                code="CS-010",
+                path="$.schema",
+                message="Contract has no schemas or schema references defined",
+                severity=Severity.ERROR,
+                suggestion="Add at least one schema or schema_ref to the contract",
+            )
+        )
 
     # Validate schema_refs (basic validation only - full validation happens at registry)
     if contract.has_schema_refs:
         for idx, ref in enumerate(contract.schema_refs):
             ref_path = f"$.schema[{idx}]"
             if not ref.schema_id:
-                issues.append(ContractStructureIssue(
-                    code="CS-014",
-                    path=f"{ref_path}.schema_id",
-                    message=f"Schema reference at index {idx} is missing schema_id",
-                    severity=Severity.ERROR,
-                    suggestion="Add a schema_id to the schema reference",
-                ))
+                issues.append(
+                    ContractStructureIssue(
+                        code="CS-014",
+                        path=f"{ref_path}.schema_id",
+                        message=f"Schema reference at index {idx} is missing schema_id",
+                        severity=Severity.ERROR,
+                        suggestion="Add a schema_id to the schema reference",
+                    )
+                )
 
     # Validate inline schemas (only if not using refs)
     if contract.schemas and not contract.has_schema_refs:
@@ -1427,13 +1503,15 @@ def validate_contract_structure(contract: Contract) -> ContractStructureResult:
             schema_path = f"$.schema[{idx}]"
 
             if not schema.name:
-                issues.append(ContractStructureIssue(
-                    code="CS-011",
-                    path=f"{schema_path}.name",
-                    message=f"Schema at index {idx} is missing a name",
-                    severity=Severity.ERROR,
-                    suggestion="Add a name to the schema",
-                ))
+                issues.append(
+                    ContractStructureIssue(
+                        code="CS-011",
+                        path=f"{schema_path}.name",
+                        message=f"Schema at index {idx} is missing a name",
+                        severity=Severity.ERROR,
+                        suggestion="Add a name to the schema",
+                    )
+                )
 
             fields = schema.fields
             if fields:
@@ -1464,13 +1542,15 @@ def validate_contract_structure(contract: Contract) -> ContractStructureResult:
                         )
 
                     if not field_info.description:
-                        issues.append(ContractStructureIssue(
-                            code="CS-023",
-                            path=f"{field_path}.description",
-                            message=f"Field '{field_name}' has no description",
-                            severity=Severity.WARNING,
-                            suggestion="Add a description explaining the field's purpose",
-                        ))
+                        issues.append(
+                            ContractStructureIssue(
+                                code="CS-023",
+                                path=f"{field_path}.description",
+                                message=f"Field '{field_name}' has no description",
+                                severity=Severity.WARNING,
+                                suggestion="Add a description explaining the field's purpose",
+                            )
+                        )
 
     error_count = sum(1 for i in issues if i.severity == Severity.ERROR)
     warning_count = sum(1 for i in issues if i.severity == Severity.WARNING)

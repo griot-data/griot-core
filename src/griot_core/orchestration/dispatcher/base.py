@@ -5,6 +5,7 @@ Dispatchers are responsible for sending validation jobs to workers.
 This new interface separates WASM worker dispatch from container dispatch
 to avoid Docker-in-Docker issues in Kubernetes environments.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -3,13 +3,12 @@
 Provides constants and helpers for translating Griot executor function
 names and check categories into dbt test configurations.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from griot_core.models.enums import CheckCategory
-
 
 # ── Function name → CheckCategory ────────────────────────────────────
 
@@ -27,9 +26,11 @@ FUNCTION_TO_CATEGORY: dict[str, CheckCategory] = {
 
 # ── CheckCategory → dbt test config ──────────────────────────────────
 
+
 @dataclass
 class DbtTestConfig:
     """Configuration for a dbt test mapping."""
+
     test_name: str
     is_builtin: bool
     param_mapping: dict[str, str]  # griot param → dbt param

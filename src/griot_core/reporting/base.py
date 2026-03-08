@@ -6,6 +6,7 @@ and the tool-agnostic data types that flow through the reporting pipeline.
 
 Follows the DataConnector Protocol pattern from connectors/base.py.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -80,6 +81,7 @@ class ToolCheckResult:
     Named ToolCheckResult (not CheckResult) to avoid collision with
     executors.types.CheckResult which serves the internal executor layer.
     """
+
     check_name: str
     status: str  # "pass"/"fail"/"warn"/"error"/"skip"
     column: str | None = None
@@ -148,6 +150,7 @@ class SchemaTestResult:
         errors: List of error details for failures.
         check_results: Individual check-level results.
     """
+
     schema_name: str
     total: int = 0
     passed: int = 0
@@ -174,8 +177,11 @@ class ToolValidationReport:
         all_passed: True if no tests failed or errored.
         metadata: Tool-specific metadata (version, elapsed time, etc.).
     """
+
     tool: str
     schemas: Dict[str, SchemaTestResult] = field(default_factory=dict)
-    overall: SchemaTestResult = field(default_factory=lambda: SchemaTestResult(schema_name="_overall"))
+    overall: SchemaTestResult = field(
+        default_factory=lambda: SchemaTestResult(schema_name="_overall")
+    )
     all_passed: bool = True
     metadata: Dict[str, Any] = field(default_factory=dict)

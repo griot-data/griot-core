@@ -4,10 +4,12 @@ Griot Core Reports
 Report generation for ODCS data contracts.
 Uses Python stdlib only (no external dependencies).
 """
+
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -110,9 +112,7 @@ class ContractReport:
                 "nullable_count": len(self.nullable_fields),
                 "required_count": len(self.required_fields),
                 "documentation_coverage": (
-                    self.documented_fields / self.total_fields * 100
-                    if self.total_fields > 0
-                    else 0
+                    self.documented_fields / self.total_fields * 100 if self.total_fields > 0 else 0
                 ),
             },
             "field_types": self.field_types,
@@ -141,16 +141,16 @@ class ContractReport:
             "",
             "## Contract Metadata",
             "",
-            f"| Property | Value |",
-            f"|----------|-------|",
+            "| Property | Value |",
+            "|----------|-------|",
             f"| ID | {self.contract_id or 'Not set'} |",
             f"| Version | {self.contract_version or 'Not set'} |",
             f"| Status | {self.contract_status or 'Not set'} |",
             "",
             "## Summary",
             "",
-            f"| Metric | Value |",
-            f"|--------|-------|",
+            "| Metric | Value |",
+            "|--------|-------|",
             f"| Total Fields | {self.total_fields} |",
             f"| Required Fields | {len(self.required_fields)} |",
             f"| Nullable Fields | {len(self.nullable_fields)} |",
@@ -163,30 +163,36 @@ class ContractReport:
         for ftype, count in sorted(self.field_types.items()):
             lines.append(f"- **{ftype}**: {count}")
 
-        lines.extend([
-            "",
-            "## Keys",
-            "",
-            f"- **Primary Key**: {self.primary_key or 'Not defined'}",
-            f"- **Unique Fields**: {', '.join(self.unique_fields) or 'None'}",
-            f"- **Partitioned Fields**: {', '.join(self.partitioned_fields) or 'None'}",
-            "",
-        ])
+        lines.extend(
+            [
+                "",
+                "## Keys",
+                "",
+                f"- **Primary Key**: {self.primary_key or 'Not defined'}",
+                f"- **Unique Fields**: {', '.join(self.unique_fields) or 'None'}",
+                f"- **Partitioned Fields**: {', '.join(self.partitioned_fields) or 'None'}",
+                "",
+            ]
+        )
 
         if self.critical_data_elements:
-            lines.extend([
-                "## Critical Data Elements",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Critical Data Elements",
+                    "",
+                ]
+            )
             for cde in self.critical_data_elements:
                 lines.append(f"- {cde}")
             lines.append("")
 
         if self.recommendations:
-            lines.extend([
-                "## Recommendations",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Recommendations",
+                    "",
+                ]
+            )
             for rec in self.recommendations:
                 lines.append(f"- {rec}")
             lines.append("")
@@ -257,13 +263,9 @@ def generate_contract_report(schema: type[Schema] | Schema) -> ContractReport:
 
     undocumented = report.total_fields - report.documented_fields
     if undocumented > 0:
-        report.recommendations.append(
-            f"Add descriptions to {undocumented} undocumented fields"
-        )
+        report.recommendations.append(f"Add descriptions to {undocumented} undocumented fields")
 
     if not report.fields_with_quality_rules and report.total_fields > 0:
-        report.recommendations.append(
-            "Consider adding quality rules to validate data integrity"
-        )
+        report.recommendations.append("Consider adding quality rules to validate data integrity")
 
     return report

@@ -8,21 +8,22 @@ All connectors implement the DataConnector protocol and return
 Arrow IPC bytes, not DataFrame objects. This keeps griot-core
 framework-agnostic.
 """
+
 from __future__ import annotations
 
 from .base import (
-    DataConnector,
     BaseConnector,
+    ConnectionTestResult,
     ConnectorConfig,
     ConnectorType,
-    ConnectionTestResult,
+    DataConnector,
     FetchResult,
 )
 from .registry import (
-    ConnectorRegistry,
     ConnectorInfo,
     ConnectorNotFoundError,
     ConnectorRegistrationError,
+    ConnectorRegistry,
     get_default_registry,
     register_connector,
 )

@@ -4,21 +4,24 @@ WASM runtime for executing WASM-based checks.
 Uses wasmtime to execute WASM modules that receive Arrow IPC data
 and return CheckResult.
 """
+
 from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from griot_core.models import Check
+
 from .types import CheckResult, ExecutorSpec
 
 
 @dataclass
 class WasmExecutionContext:
     """Context for WASM execution."""
+
     module_path: Path
     memory_limit_mb: int = 256
     timeout_seconds: int = 60
@@ -28,6 +31,7 @@ class WasmExecutionContext:
 @dataclass
 class WasmExecutionResult:
     """Result of WASM execution."""
+
     check_result: CheckResult
     execution_time_ms: float
     memory_used_bytes: int = 0
@@ -36,11 +40,13 @@ class WasmExecutionResult:
 
 class WasmModuleNotFoundError(Exception):
     """Raised when a WASM module cannot be found."""
+
     pass
 
 
 class WasmExecutionError(Exception):
     """Raised when WASM execution fails."""
+
     pass
 
 
@@ -89,13 +95,13 @@ class WasmRuntime:
         if self._engine is None:
             try:
                 import wasmtime
+
                 config = wasmtime.Config()
                 config.consume_fuel = True  # Enable fuel metering
                 self._engine = wasmtime.Engine(config)
             except ImportError:
                 raise ImportError(
-                    "wasmtime is required for WASM execution. "
-                    "Install it with: pip install wasmtime"
+                    "wasmtime is required for WASM execution. Install it with: pip install wasmtime"
                 )
         return self._engine
 
@@ -175,12 +181,11 @@ class WasmRuntime:
             await self._fetch_module(spec, module_path)
 
         if not module_path.exists():
-            raise WasmModuleNotFoundError(
-                f"WASM module not found: {spec.artifact_url}"
-            )
+            raise WasmModuleNotFoundError(f"WASM module not found: {spec.artifact_url}")
 
         try:
             import wasmtime
+
             engine = self._get_engine()
             module = wasmtime.Module.from_file(engine, str(module_path))
             self._module_cache[cache_key] = module
@@ -251,8 +256,7 @@ class WasmRuntime:
                 validate_fn = instance.exports(store).get("run")
             if validate_fn is None:
                 raise WasmExecutionError(
-                    f"WASM module does not export '{check_function}', "
-                    f"'validate', or 'run' function"
+                    f"WASM module does not export '{check_function}', 'validate', or 'run' function"
                 )
 
             # For a real implementation, we would:

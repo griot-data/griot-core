@@ -4,6 +4,7 @@ Validation result types.
 Defines the result structures returned by the validation engine
 after running checks against data.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from griot_core.models.enums import Severity
 
 class ValidationMode(str, Enum):
     """Mode of validation execution."""
+
     FULL = "full"  # Run all checks
     SAMPLE = "sample"  # Run on sample data only
     SCHEMA_ONLY = "schema_only"  # Only validate schema structure
@@ -24,6 +26,7 @@ class ValidationMode(str, Enum):
 
 class CheckStatus(str, Enum):
     """Status of a check execution."""
+
     PASSED = "passed"
     FAILED = "failed"
     SKIPPED = "skipped"
@@ -50,6 +53,7 @@ class CheckExecutionResult:
         executor_id: ID of the executor that ran the check
         executor_version: Version of the executor
     """
+
     check_name: str
     status: CheckStatus
     severity: Severity = Severity.WARNING
@@ -96,6 +100,7 @@ class SchemaValidationResult:
         warnings: Number of warning-level failures
         skipped_checks: Number of checks that were skipped
     """
+
     schema_id: str
     schema_name: str
     is_valid: bool
@@ -135,8 +140,11 @@ class SchemaValidationResult:
 
     def get_critical_failures(self) -> List[CheckExecutionResult]:
         """Get all critical failures."""
-        return [r for r in self.check_results
-                if r.status == CheckStatus.FAILED and r.severity == Severity.CRITICAL]
+        return [
+            r
+            for r in self.check_results
+            if r.status == CheckStatus.FAILED and r.severity == Severity.CRITICAL
+        ]
 
 
 @dataclass
@@ -146,6 +154,7 @@ class ValidationSummary:
 
     Provides high-level statistics about the validation.
     """
+
     total_schemas: int = 0
     valid_schemas: int = 0
     invalid_schemas: int = 0
@@ -188,6 +197,7 @@ class ValidationResult:
         errors: Any errors that occurred during validation
         warnings: Any warnings from validation
     """
+
     is_valid: bool
     contract_id: str
     contract_version: str = "1.0.0"

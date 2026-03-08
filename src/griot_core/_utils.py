@@ -4,6 +4,7 @@ Griot Core Internal Utilities
 Shared helper functions used across multiple modules.
 This module is internal and not part of the public API.
 """
+
 from __future__ import annotations
 
 from typing import Any, Union

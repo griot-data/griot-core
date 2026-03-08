@@ -4,12 +4,14 @@ Contract inheritance resolver.
 Resolves contract inheritance chains by fetching parent contracts
 and merging them with child overrides.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Protocol
+from typing import Any, Dict, List, Optional, Protocol
 
 from griot_core.models import Contract
+
 from .merge import merge_contracts_dict
 
 
@@ -34,6 +36,7 @@ class ContractFetcher(Protocol):
 
 class ContractNotFoundError(Exception):
     """Raised when a contract cannot be found."""
+
     def __init__(self, uri: str, message: str = ""):
         self.uri = uri
         self.message = message or f"Contract not found: {uri}"
@@ -42,6 +45,7 @@ class ContractNotFoundError(Exception):
 
 class CircularInheritanceError(Exception):
     """Raised when a circular inheritance chain is detected."""
+
     def __init__(self, chain: List[str]):
         self.chain = chain
         cycle = " -> ".join(chain)
@@ -59,6 +63,7 @@ class ResolvedContract:
         inheritance_chain: List of parent contract URIs in order
         resolution_warnings: Any warnings encountered during resolution
     """
+
     resolved_definition: Dict[str, Any]
     override_definition: Dict[str, Any]
     inheritance_chain: List[str] = field(default_factory=list)
@@ -192,8 +197,7 @@ class ContractResolver:
         # Check depth
         if depth >= self._max_depth:
             warnings.append(
-                f"Maximum inheritance depth ({self._max_depth}) reached. "
-                f"Stopping at {parent_uri}"
+                f"Maximum inheritance depth ({self._max_depth}) reached. Stopping at {parent_uri}"
             )
             return contract.copy()
 

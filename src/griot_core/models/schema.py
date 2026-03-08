@@ -4,6 +4,7 @@ Schema model - First-class entity representing a data asset.
 Schemas represent data assets (tables, views, files) and exist independently
 of contracts. Multiple contracts can reference the same schema.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -43,6 +44,7 @@ class Schema:
         created_at: When this schema was created
         updated_at: When this schema was last modified
     """
+
     # Identity
     id: str
     name: str

@@ -15,21 +15,23 @@ Special workers:
 - WasmWorker: Dedicated WASM-only worker for running inside containers
   (used by the orchestration module to avoid Docker-in-Docker)
 """
+
 from __future__ import annotations
 
 from .base import (
+    ContractFetcher,
+    JobPayload,
     Worker,
     WorkerConfig,
     WorkerResult,
     WorkerStatus,
-    JobPayload,
-    ContractFetcher,
 )
-from .local import LocalWorker, LocalContractFetcher, run_local_validation
-from .lambda_worker import LambdaWorker, handler as lambda_handler
-from .kubernetes import KubernetesWorker
 from .cloudrun import CloudRunWorker
-from .wasm_worker import WasmWorker, WasmCheckResult, WasmWorkerResult
+from .kubernetes import KubernetesWorker
+from .lambda_worker import LambdaWorker
+from .lambda_worker import handler as lambda_handler
+from .local import LocalContractFetcher, LocalWorker, run_local_validation
+from .wasm_worker import WasmCheckResult, WasmWorker, WasmWorkerResult
 
 __all__ = [
     # Base types

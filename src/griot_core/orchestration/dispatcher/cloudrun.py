@@ -3,6 +3,7 @@ Google Cloud Run dispatcher for orchestrated validation jobs.
 
 Dispatches WASM worker jobs and container checks to Cloud Run services.
 """
+
 from __future__ import annotations
 
 import json
@@ -12,15 +13,15 @@ from typing import Any
 
 import httpx
 
-from griot_core.orchestration.types import (
-    ContainerJobSpec,
-    DispatchResult,
-    WasmJobSpec,
-)
 from griot_core.orchestration.dispatcher.base import (
     ComputeBackend,
     ComputeDispatcher,
     DispatcherConfig,
+)
+from griot_core.orchestration.types import (
+    ContainerJobSpec,
+    DispatchResult,
+    WasmJobSpec,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,8 +113,8 @@ class CloudRunDispatcher(ComputeDispatcher):
 
         try:
             import google.auth
-            from google.auth.transport.requests import Request
             import google.oauth2.id_token
+            from google.auth.transport.requests import Request
 
             if self._credentials is None:
                 self._credentials, _ = google.auth.default()
@@ -193,10 +194,7 @@ class CloudRunDispatcher(ComputeDispatcher):
                     invocation_id=request_id,
                 )
             else:
-                error_msg = (
-                    f"Cloud Run returned {response.status_code}: "
-                    f"{response.text[:200]}"
-                )
+                error_msg = f"Cloud Run returned {response.status_code}: {response.text[:200]}"
                 logger.error("Failed to dispatch WASM job %s: %s", spec.job_id, error_msg)
                 return DispatchResult(
                     success=False,
@@ -316,8 +314,7 @@ class CloudRunDispatcher(ComputeDispatcher):
 
         except ImportError:
             logger.error(
-                "google-cloud-run not installed. "
-                "Install with: pip install google-cloud-run"
+                "google-cloud-run not installed. Install with: pip install google-cloud-run"
             )
             return DispatchResult(
                 success=False,
@@ -327,9 +324,7 @@ class CloudRunDispatcher(ComputeDispatcher):
                 error="google-cloud-run not installed",
             )
         except Exception as e:
-            logger.exception(
-                "Error dispatching container check %s to Cloud Run", spec.check.name
-            )
+            logger.exception("Error dispatching container check %s to Cloud Run", spec.check.name)
             return DispatchResult(
                 success=False,
                 job_id=spec.job_id,
@@ -353,8 +348,7 @@ class CloudRunDispatcher(ComputeDispatcher):
             return {
                 "invocation_id": invocation_id,
                 "status": "unknown",
-                "note": "HTTP invocations don't provide status. "
-                "Check callback results.",
+                "note": "HTTP invocations don't provide status. Check callback results.",
             }
 
         # For Cloud Run Jobs, check execution status
@@ -371,9 +365,7 @@ class CloudRunDispatcher(ComputeDispatcher):
                 "failed": execution.failed_count,
                 "running": execution.running_count,
                 "completion_time": (
-                    execution.completion_time.isoformat()
-                    if execution.completion_time
-                    else None
+                    execution.completion_time.isoformat() if execution.completion_time else None
                 ),
             }
         except Exception as e:

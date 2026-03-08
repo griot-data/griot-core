@@ -8,20 +8,22 @@ A Schema contains:
 - Schema-level metadata (id, name, logical_type, physical_type, etc.)
 - Properties (fields) as Field objects
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from typing import Any, Callable, ClassVar, TypeVar
 
-from griot_core.types import DataType, Sensitivity, PIIType, PrivacyInfo as PI, PrivacyInfo
+from griot_core import QualityRule
 from griot_core._utils import (
     extract_base_type,
     is_optional_type,
-    python_type_to_logical,
     logical_type_to_python,
+    python_type_to_logical,
 )
-
-from griot_core import QualityRule
+from griot_core.types import DataType, PIIType, PrivacyInfo, Sensitivity
+from griot_core.types import PrivacyInfo as PI
 
 __all__ = [
     "Schema",
@@ -256,15 +258,20 @@ class FieldInfo:
             # Handle both ODCS (primary_key) and registry (is_primary_key) formats
             primary_key=data.get("primary_key", False) or data.get("is_primary_key", False),
             partitioned=data.get("partitioned", False) or data.get("is_partitioned", False),
-            partition_key_position=data.get("partition_key_position") or data.get("partitionKeyPosition"),
+            partition_key_position=data.get("partition_key_position")
+            or data.get("partitionKeyPosition"),
             required=data.get("required", False) or data.get("is_required", False),
             unique=data.get("unique", False) or data.get("is_unique", False),
-            nullable=data.get("nullable", True) if "nullable" in data else data.get("is_nullable", True),
-            critical_data_element=data.get("critical_data_element", False) or data.get("criticalDataElement", False),
+            nullable=data.get("nullable", True)
+            if "nullable" in data
+            else data.get("is_nullable", True),
+            critical_data_element=data.get("critical_data_element", False)
+            or data.get("criticalDataElement", False),
             relationships=data.get("relationships", []),
             tags=data.get("tags", []),
             custom_properties=custom_props,
-            authoritative_definitions=data.get("authoritative_definitions", []) or data.get("authoritativeDefinitions", []),
+            authoritative_definitions=data.get("authoritative_definitions", [])
+            or data.get("authoritativeDefinitions", []),
             quality=data.get("quality", []),
         )
 
@@ -331,7 +338,7 @@ class Field:
         critical_data_element: bool = False,
         is_pii: bool = False,
         pii_type: PIIType | None = None,
-        sensitivity: Sensitivity  = Sensitivity.INTERNAL,
+        sensitivity: Sensitivity = Sensitivity.INTERNAL,
         requires_masking: bool = False,
         relationships: list[dict[str, Any]] | None = None,
         tags: list[str] | None = None,
@@ -400,10 +407,10 @@ class Field:
         if self._has_default and self.default_factory is not None:
             raise ValueError("Cannot specify both 'default' and 'default_factory'")
 
-    def _auto_add_quality_rules(self)->None:
+    def _auto_add_quality_rules(self) -> None:
         """Automatically add quality rules based on field properties."""
 
-        if self.primary_key :
+        if self.primary_key:
             self.quality.extend([QualityRule.duplicate_rows(must_be=0)])
             self.quality.extend([QualityRule.null_values(must_be=0)])
         if self.unique:
@@ -413,7 +420,7 @@ class Field:
             if QualityRule.null_values(must_be=0) not in self.quality:
                 self.quality.extend([QualityRule.null_values(must_be=0)])
 
-    def _check_pii_settings(self,sensitivity, requires_masking, is_pii, pii_type) -> None:
+    def _check_pii_settings(self, sensitivity, requires_masking, is_pii, pii_type) -> None:
         """Check and set privacy settings if any PII-related args are provided."""
 
         if is_pii and pii_type is None:
@@ -507,11 +514,20 @@ class SchemaMeta(type):
     """Metaclass for Schema that processes field definitions."""
 
     # Schema-level attributes that should NOT be treated as data fields
-    _SCHEMA_METADATA_ATTRS = frozenset({
-        "id", "name", "logical_type", "physical_type", "physical_name",
-        "description", "business_name", "authoritative_definitions",
-        "quality", "tags",
-    })
+    _SCHEMA_METADATA_ATTRS = frozenset(
+        {
+            "id",
+            "name",
+            "logical_type",
+            "physical_type",
+            "physical_name",
+            "description",
+            "business_name",
+            "authoritative_definitions",
+            "quality",
+            "tags",
+        }
+    )
 
     def __new__(
         mcs,
@@ -552,7 +568,9 @@ class SchemaMeta(type):
             elif field_name in mcs._SCHEMA_METADATA_ATTRS:
                 # Skip schema-level metadata attributes unless explicitly defined as Field
                 continue
-            elif field_def is None or not isinstance(field_def, (classmethod, staticmethod, property)):
+            elif field_def is None or not isinstance(
+                field_def, (classmethod, staticmethod, property)
+            ):
                 if field_name not in fields:
                     py_type = extract_base_type(field_type)
                     fields[field_name] = FieldInfo(
@@ -565,14 +583,14 @@ class SchemaMeta(type):
                         default=field_def,
                     )
 
-        cls._schema_fields = fields
-        cls._schema_field_names = tuple(fields.keys())
+        cls._schema_fields = fields  # type: ignore[attr-defined]
+        cls._schema_field_names = tuple(fields.keys())  # type: ignore[attr-defined]
 
         # Find primary key
-        cls._schema_primary_key = None
+        cls._schema_primary_key = None  # type: ignore[attr-defined]
         for fname, finfo in fields.items():
             if finfo.primary_key:
-                cls._schema_primary_key = fname
+                cls._schema_primary_key = fname  # type: ignore[attr-defined]
                 break
 
         return cls
@@ -686,6 +704,7 @@ class Schema(metaclass=SchemaMeta):
                 elif isinstance(prop, dict):
                     field_info = FieldInfo.from_dict(prop)
                     self._instance_fields[field_info.name] = field_info
+
     # -------------------------------------------------------------------------
     # Field Access
     # -------------------------------------------------------------------------
@@ -696,7 +715,6 @@ class Schema(metaclass=SchemaMeta):
         result = dict(self._schema_fields)
         result.update(self._instance_fields)
         return result
-
 
     @classmethod
     def list_fields(cls) -> list[FieldInfo]:
@@ -787,7 +805,7 @@ class Schema(metaclass=SchemaMeta):
         quality = data.get("quality", []) or data.get("checks", [])
 
         return cls(
-            id=data.get("id"),
+            id=data.get("id"),  # type: ignore[arg-type]
             name=data.get("name", ""),
             logical_type=data.get("logical_type", "object"),
             physical_type=data.get("physical_type"),
@@ -797,7 +815,7 @@ class Schema(metaclass=SchemaMeta):
             authoritative_definitions=data.get("authoritative_definitions", []),
             quality=quality,
             tags=data.get("tags", []),
-            properties=properties,
+            properties=properties,  # type: ignore[arg-type]
         )
 
     # -------------------------------------------------------------------------

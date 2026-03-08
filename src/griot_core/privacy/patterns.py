@@ -10,9 +10,10 @@ different regions. Patterns are utility data that can be:
 Note: Validation functions (luhn_check, iban_check, etc.) are kept
 as pure functions with no external dependencies.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, List, Optional
 
 from griot_core.models.enums import ComplianceFramework, PIIType
@@ -36,6 +37,7 @@ class PIIPattern:
         frameworks: Compliance frameworks this pattern is relevant to
         region: Geographic region for this pattern (e.g., "kenya", "eu", "universal")
     """
+
     name: str
     pii_type: PIIType
     pattern: str  # Regex pattern
@@ -137,11 +139,7 @@ def kra_pin_check(kra_pin: str) -> bool:
     if len(kra_pin) != 11:
         return False
 
-    return (
-        kra_pin[0].isalpha()
-        and kra_pin[1:10].isdigit()
-        and kra_pin[10].isalpha()
-    )
+    return kra_pin[0].isalpha() and kra_pin[1:10].isdigit() and kra_pin[10].isalpha()
 
 
 def email_format_check(email: str) -> bool:
@@ -254,7 +252,11 @@ UNIVERSAL_PATTERNS: List[PIIPattern] = [
         description="Email address",
         confidence=0.95,
         validator=email_format_check,
-        frameworks=[ComplianceFramework.GDPR, ComplianceFramework.CCPA, ComplianceFramework.KENYA_DPA],
+        frameworks=[
+            ComplianceFramework.GDPR,
+            ComplianceFramework.CCPA,
+            ComplianceFramework.KENYA_DPA,
+        ],
         region="universal",
     ),
     PIIPattern(
@@ -264,7 +266,11 @@ UNIVERSAL_PATTERNS: List[PIIPattern] = [
         description="Credit card number (Visa, Mastercard, Amex, Discover)",
         confidence=0.9,
         validator=luhn_check,
-        frameworks=[ComplianceFramework.PCI_DSS, ComplianceFramework.GDPR, ComplianceFramework.CCPA],
+        frameworks=[
+            ComplianceFramework.PCI_DSS,
+            ComplianceFramework.GDPR,
+            ComplianceFramework.CCPA,
+        ],
         region="universal",
     ),
     PIIPattern(
@@ -300,7 +306,11 @@ UNIVERSAL_PATTERNS: List[PIIPattern] = [
         pattern=r"\b(?:19|20)\d{2}[-/](?:0[1-9]|1[0-2])[-/](?:0[1-9]|[12]\d|3[01])\b",
         description="Date of birth (YYYY-MM-DD or YYYY/MM/DD)",
         confidence=0.7,  # Lower confidence - could be any date
-        frameworks=[ComplianceFramework.GDPR, ComplianceFramework.HIPAA, ComplianceFramework.KENYA_DPA],
+        frameworks=[
+            ComplianceFramework.GDPR,
+            ComplianceFramework.HIPAA,
+            ComplianceFramework.KENYA_DPA,
+        ],
         region="universal",
     ),
     PIIPattern(
@@ -318,6 +328,7 @@ UNIVERSAL_PATTERNS: List[PIIPattern] = [
 # =============================================================================
 # Combined Pattern Sets
 # =============================================================================
+
 
 def get_patterns_for_region(region: str) -> List[PIIPattern]:
     """
@@ -352,7 +363,4 @@ def get_patterns_for_framework(framework: ComplianceFramework) -> List[PIIPatter
         List of PIIPattern objects relevant to the framework
     """
     all_patterns = KENYA_PATTERNS + EU_PATTERNS + UNIVERSAL_PATTERNS
-    return [
-        p for p in all_patterns
-        if p.frameworks and framework in p.frameworks
-    ]
+    return [p for p in all_patterns if p.frameworks and framework in p.frameworks]

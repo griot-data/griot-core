@@ -4,23 +4,25 @@ Executor registry for fetching executor specifications.
 The registry manages executor specifications and provides caching
 for efficient executor lookups.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
 from urllib.parse import urlparse
 
-from .types import ExecutorSpec
 from griot_core.models.enums import Runtime
+
+from .types import ExecutorSpec
 
 
 class URIScheme(str, Enum):
     """Supported URI schemes for executor references."""
+
     REGISTRY = "registry"
     FILE = "file"
     OCI = "oci"
@@ -35,6 +37,7 @@ class ExecutorManifest:
 
     Contains metadata about the executor and how to run it.
     """
+
     id: str
     version: str
     runtime: Runtime
@@ -62,6 +65,7 @@ class ExecutorFetcher(Protocol):
 
 class ExecutorNotFoundError(Exception):
     """Raised when an executor cannot be found."""
+
     def __init__(self, uri: str, message: str = ""):
         self.uri = uri
         self.message = message or f"Executor not found: {uri}"
@@ -70,6 +74,7 @@ class ExecutorNotFoundError(Exception):
 
 class InvalidExecutorURIError(Exception):
     """Raised when an executor URI is invalid."""
+
     def __init__(self, uri: str, reason: str = ""):
         self.uri = uri
         self.reason = reason
@@ -79,6 +84,7 @@ class InvalidExecutorURIError(Exception):
 @dataclass
 class CachedExecutor:
     """Cached executor with metadata."""
+
     spec: ExecutorSpec
     artifact_path: Optional[Path] = None
     fetched_at: Optional[float] = None
@@ -113,11 +119,11 @@ class ExecutorRegistry:
                 "properties": {
                     "column": {"type": "string"},
                     "threshold": {"type": "number"},
-                    "operator": {"type": "string", "enum": ["lte", "gte", "eq", "lt", "gt"]}
+                    "operator": {"type": "string", "enum": ["lte", "gte", "eq", "lt", "gt"]},
                 },
-                "required": ["column"]
+                "required": ["column"],
             },
-            tags=["data-quality", "null-check"]
+            tags=["data-quality", "null-check"],
         ),
         "unique-check": ExecutorSpec(
             id="unique-check",
@@ -127,13 +133,10 @@ class ExecutorRegistry:
             description="Count duplicate values in a column",
             input_schema={
                 "type": "object",
-                "properties": {
-                    "column": {"type": "string"},
-                    "threshold": {"type": "number"}
-                },
-                "required": ["column"]
+                "properties": {"column": {"type": "string"}, "threshold": {"type": "number"}},
+                "required": ["column"],
             },
-            tags=["data-quality", "unique-check"]
+            tags=["data-quality", "unique-check"],
         ),
         "pattern-check": ExecutorSpec(
             id="pattern-check",
@@ -146,11 +149,11 @@ class ExecutorRegistry:
                 "properties": {
                     "column": {"type": "string"},
                     "pattern": {"type": "string"},
-                    "threshold": {"type": "number"}
+                    "threshold": {"type": "number"},
                 },
-                "required": ["column", "pattern"]
+                "required": ["column", "pattern"],
             },
-            tags=["data-quality", "pattern-check"]
+            tags=["data-quality", "pattern-check"],
         ),
         "range-check": ExecutorSpec(
             id="range-check",
@@ -163,11 +166,11 @@ class ExecutorRegistry:
                 "properties": {
                     "column": {"type": "string"},
                     "min": {"type": "number"},
-                    "max": {"type": "number"}
+                    "max": {"type": "number"},
                 },
-                "required": ["column"]
+                "required": ["column"],
             },
-            tags=["data-quality", "range-check"]
+            tags=["data-quality", "range-check"],
         ),
         "row-count": ExecutorSpec(
             id="row-count",
@@ -177,12 +180,9 @@ class ExecutorRegistry:
             description="Check row count is within bounds",
             input_schema={
                 "type": "object",
-                "properties": {
-                    "min": {"type": "integer"},
-                    "max": {"type": "integer"}
-                }
+                "properties": {"min": {"type": "integer"}, "max": {"type": "integer"}},
             },
-            tags=["data-quality", "row-count"]
+            tags=["data-quality", "row-count"],
         ),
         "freshness-check": ExecutorSpec(
             id="freshness-check",
@@ -194,11 +194,11 @@ class ExecutorRegistry:
                 "type": "object",
                 "properties": {
                     "column": {"type": "string"},
-                    "max_age": {"type": "string"}  # ISO 8601 duration
+                    "max_age": {"type": "string"},  # ISO 8601 duration
                 },
-                "required": ["column", "max_age"]
+                "required": ["column", "max_age"],
             },
-            tags=["data-quality", "freshness-check"]
+            tags=["data-quality", "freshness-check"],
         ),
         "masking-check": ExecutorSpec(
             id="masking-check",
@@ -211,11 +211,11 @@ class ExecutorRegistry:
                 "properties": {
                     "column": {"type": "string"},
                     "strategy": {"type": "string"},
-                    "pii_type": {"type": "string"}
+                    "pii_type": {"type": "string"},
                 },
-                "required": ["column"]
+                "required": ["column"],
             },
-            tags=["privacy", "masking-check"]
+            tags=["privacy", "masking-check"],
         ),
         "pii-detection": ExecutorSpec(
             id="pii-detection",
@@ -228,11 +228,11 @@ class ExecutorRegistry:
                 "properties": {
                     "column": {"type": "string"},
                     "patterns": {"type": "array"},
-                    "declared_pii": {"type": "boolean"}
+                    "declared_pii": {"type": "boolean"},
                 },
-                "required": ["column"]
+                "required": ["column"],
             },
-            tags=["privacy", "pii-detection"]
+            tags=["privacy", "pii-detection"],
         ),
         "distribution-drift": ExecutorSpec(
             id="distribution-drift",
@@ -246,11 +246,11 @@ class ExecutorRegistry:
                     "column": {"type": "string"},
                     "baseline": {"type": "object"},
                     "method": {"type": "string", "enum": ["psi", "kl"]},
-                    "threshold": {"type": "number"}
+                    "threshold": {"type": "number"},
                 },
-                "required": ["column", "method"]
+                "required": ["column", "method"],
             },
-            tags=["data-quality", "drift"]
+            tags=["data-quality", "drift"],
         ),
         "referential-check": ExecutorSpec(
             id="referential-check",
@@ -264,15 +264,12 @@ class ExecutorRegistry:
                     "column": {"type": "string"},
                     "reference": {
                         "type": "object",
-                        "properties": {
-                            "dataset": {"type": "string"},
-                            "column": {"type": "string"}
-                        }
-                    }
+                        "properties": {"dataset": {"type": "string"}, "column": {"type": "string"}},
+                    },
                 },
-                "required": ["column", "reference"]
+                "required": ["column", "reference"],
             },
-            tags=["data-quality", "referential"]
+            tags=["data-quality", "referential"],
         ),
     }
 

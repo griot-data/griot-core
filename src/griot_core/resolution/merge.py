@@ -4,18 +4,17 @@ Deep merge utilities for contract inheritance.
 Provides merge logic for combining parent and child contracts
 with proper override semantics.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List, TypeVar, Union
+from typing import Any, Dict, List, TypeVar
 
 T = TypeVar("T")
 
 
 def deep_merge(
-    parent: Dict[str, Any],
-    child: Dict[str, Any],
-    list_strategy: str = "extend"
+    parent: Dict[str, Any], child: Dict[str, Any], list_strategy: str = "extend"
 ) -> Dict[str, Any]:
     """
     Deep merge two dictionaries with child values overriding parent.
@@ -50,9 +49,7 @@ def deep_merge(
             result[key] = deep_merge(result[key], child_value, list_strategy)
         elif isinstance(child_value, list) and isinstance(result[key], list):
             # List merge based on strategy
-            result[key] = _merge_lists(
-                result[key], child_value, list_strategy
-            )
+            result[key] = _merge_lists(result[key], child_value, list_strategy)
         else:
             # Scalar override
             result[key] = deepcopy(child_value)
@@ -60,11 +57,7 @@ def deep_merge(
     return result
 
 
-def _merge_lists(
-    parent_list: List[Any],
-    child_list: List[Any],
-    strategy: str
-) -> List[Any]:
+def _merge_lists(parent_list: List[Any], child_list: List[Any], strategy: str) -> List[Any]:
     """
     Merge two lists based on strategy.
 
@@ -105,8 +98,7 @@ def _merge_lists(
 
 
 def _merge_dict_lists(
-    parent_list: List[Dict[str, Any]],
-    child_list: List[Dict[str, Any]]
+    parent_list: List[Dict[str, Any]], child_list: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
     """
     Merge two lists of dicts by name or id key.
@@ -153,10 +145,7 @@ def _get_list_identifiers(items: List[Any]) -> set:
     return {_get_item_identifier(item) for item in items if _get_item_identifier(item)}
 
 
-def merge_contracts_dict(
-    parent: Dict[str, Any],
-    child: Dict[str, Any]
-) -> Dict[str, Any]:
+def merge_contracts_dict(parent: Dict[str, Any], child: Dict[str, Any]) -> Dict[str, Any]:
     """
     Merge two contract dictionaries with contract-specific rules.
 

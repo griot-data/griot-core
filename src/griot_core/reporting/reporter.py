@@ -4,6 +4,7 @@ Registry reporter -- pushes ToolValidationReport to the Griot Registry.
 Uses the single-call /contracts/{id}/report endpoint so the full
 Run + per-schema Validation lifecycle is handled server-side.
 """
+
 from __future__ import annotations
 
 import logging
@@ -25,6 +26,7 @@ class ReportResult:
         schemas_reported: Number of schemas that had validation records posted.
         validations: List of validation IDs created.
     """
+
     run_id: str
     status: str
     schemas_reported: int = 0
@@ -163,6 +165,7 @@ class RegistryReporter:
 
         # Merge parser metadata with reporting metadata (stop dropping dbt_version etc.)
         from datetime import datetime, timezone
+
         merged_metadata = dict(report.metadata)
         merged_metadata["total_tests"] = report.overall.total
         merged_metadata["reported_at"] = datetime.now(timezone.utc).isoformat()

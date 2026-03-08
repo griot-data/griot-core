@@ -4,10 +4,10 @@ Kubernetes worker for container-based validation.
 Provides the worker implementation for running validation jobs
 as Kubernetes Jobs or standalone pods.
 """
+
 from __future__ import annotations
 
 import asyncio
-import base64
 import json
 import os
 import sys
@@ -16,17 +16,17 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+from griot_core.executors import ExecutorRegistry, ExecutorRuntime
 from griot_core.models import Contract
 from griot_core.parsing import parse_contract_json
 from griot_core.validation import ValidationEngine, ValidationOptions
-from griot_core.executors import ExecutorRuntime, ExecutorRegistry
 
 from .base import (
+    JobPayload,
     Worker,
     WorkerConfig,
     WorkerResult,
     WorkerStatus,
-    JobPayload,
 )
 
 
@@ -91,7 +91,7 @@ class KubernetesWorker(Worker):
             config = WorkerConfig(
                 worker_id=os.environ.get(
                     "GRIOT_WORKER_ID",
-                    os.environ.get("KUBERNETES_POD_NAME", f"k8s-{uuid.uuid4().hex[:8]}")
+                    os.environ.get("KUBERNETES_POD_NAME", f"k8s-{uuid.uuid4().hex[:8]}"),
                 ),
                 worker_type="kubernetes",
                 default_timeout=int(os.environ.get("GRIOT_TIMEOUT", "300")),
@@ -286,6 +286,7 @@ class KubernetesWorker(Worker):
         # Fetch from registry
         if self.config.registry_url:
             import urllib.request
+
             url = f"{self.config.registry_url}/api/v1/contracts/{contract_id}"
             if version:
                 url += f"?version={version}"
@@ -297,8 +298,7 @@ class KubernetesWorker(Worker):
                 return contract
 
         raise ValueError(
-            f"Contract {contract_id} not found. "
-            "Set GRIOT_CONTRACT_PATH or GRIOT_REGISTRY_URL"
+            f"Contract {contract_id} not found. Set GRIOT_CONTRACT_PATH or GRIOT_REGISTRY_URL"
         )
 
     def _serialize_result(self, validation_result: Any) -> Dict[str, Any]:
@@ -309,8 +309,12 @@ class KubernetesWorker(Worker):
             "contract_version": validation_result.contract_version,
             "profile_used": validation_result.profile_used,
             "mode": validation_result.mode.value if validation_result.mode else None,
-            "started_at": validation_result.started_at.isoformat() if validation_result.started_at else None,
-            "completed_at": validation_result.completed_at.isoformat() if validation_result.completed_at else None,
+            "started_at": validation_result.started_at.isoformat()
+            if validation_result.started_at
+            else None,
+            "completed_at": validation_result.completed_at.isoformat()
+            if validation_result.completed_at
+            else None,
             "duration_ms": validation_result.duration_ms,
             "errors": validation_result.errors,
             "schema_results": [
@@ -351,6 +355,7 @@ class KubernetesWorker(Worker):
 
         try:
             import urllib.request
+
             data = result.to_json().encode("utf-8")
 
             req = urllib.request.Request(

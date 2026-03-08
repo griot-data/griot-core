@@ -24,6 +24,7 @@ Example:
     def my_pipeline():
         validate_sales_data()
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -32,15 +33,16 @@ from typing import Any, Callable, Dict, Optional
 
 try:
     from dagster import (
-        ConfigurableResource,
-        asset,
-        op,
-        Output,
-        AssetExecutionContext,
-        OpExecutionContext,
         AssetCheckResult,
         AssetCheckSeverity,
+        AssetExecutionContext,
+        ConfigurableResource,
+        OpExecutionContext,
+        Output,
+        asset,
+        op,
     )
+
     DAGSTER_AVAILABLE = True
 except ImportError:
     DAGSTER_AVAILABLE = False
@@ -52,11 +54,13 @@ except ImportError:
     def asset(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator if not args else decorator(args[0])
 
     def op(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator if not args else decorator(args[0])
 
     class Output:
@@ -88,6 +92,7 @@ class GriotValidationResult:
         check_results: Detailed check results
         errors: Error messages if any
     """
+
     is_valid: bool
     contract_id: str
     profile: str
@@ -146,11 +151,10 @@ class GriotResource(ConfigurableResource):
         """
         if not DAGSTER_AVAILABLE:
             raise ImportError(
-                "Dagster is required for this resource. "
-                "Install with: pip install dagster"
+                "Dagster is required for this resource. Install with: pip install dagster"
             )
 
-        from griot_core.workers import LocalWorker, JobPayload, WorkerStatus
+        from griot_core.workers import JobPayload, LocalWorker
 
         profile = profile or self.default_profile
         timeout = timeout or self.default_timeout
@@ -226,6 +230,7 @@ def griot_validated_asset(
         ...     # This only runs if validation passes
         ...     return load_users()
     """
+
     def decorator(func: Callable) -> Callable:
         @asset(**asset_kwargs)
         def wrapper(context: AssetExecutionContext, **kwargs: Any) -> Any:
@@ -284,6 +289,7 @@ def create_validation_op(
         ... def my_pipeline():
         ...     validate_users()
     """
+
     @op(
         name=f"validate_{contract_id.replace('-', '_')}",
         required_resource_keys={"griot"},

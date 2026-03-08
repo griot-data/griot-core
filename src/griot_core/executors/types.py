@@ -4,6 +4,7 @@ Executor types and result models.
 This module defines the types used by the executor runtime, including
 ExecutorSpec for describing executors and CheckResult for validation results.
 """
+
 from __future__ import annotations
 
 import json
@@ -33,6 +34,7 @@ class ExecutorSpec:
         output_schema: JSON Schema describing the result format
         tags: Tags for categorization
     """
+
     id: str
     version: str
     runtime: Runtime
@@ -64,6 +66,7 @@ class CheckResult:
         samples: Sample rows that failed the check (for debugging)
         error: Error message if the check failed to execute
     """
+
     passed: bool
     metric_value: Optional[float] = None
     threshold: Optional[float] = None
@@ -88,15 +91,17 @@ class CheckResult:
 
     def to_json(self) -> bytes:
         """Serialize this CheckResult to JSON bytes."""
-        return json.dumps({
-            "passed": self.passed,
-            "metric_value": self.metric_value,
-            "threshold": self.threshold,
-            "operator": self.operator,
-            "details": self.details,
-            "samples": self.samples,
-            "error": self.error,
-        }).encode()
+        return json.dumps(
+            {
+                "passed": self.passed,
+                "metric_value": self.metric_value,
+                "threshold": self.threshold,
+                "operator": self.operator,
+                "details": self.details,
+                "samples": self.samples,
+                "error": self.error,
+            }
+        ).encode()
 
 
 @dataclass
@@ -114,6 +119,7 @@ class ExecutorResult:
         memory_used_bytes: Memory used during execution
         runtime: The runtime used (wasm or container)
     """
+
     check_result: CheckResult
     executor_id: str
     executor_version: str

@@ -22,6 +22,7 @@ Example Flow:
             # Continue with pipeline
             ...
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -29,8 +30,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 try:
-    from prefect import task, get_run_logger
+    from prefect import get_run_logger, task
     from prefect.tasks import task_input_hash
+
     PREFECT_AVAILABLE = True
 except ImportError:
     PREFECT_AVAILABLE = False
@@ -39,10 +41,12 @@ except ImportError:
     def task(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator if not args else decorator(args[0])
 
     def get_run_logger():
         import logging
+
         return logging.getLogger("griot")
 
     def task_input_hash(*args, **kwargs):
@@ -62,6 +66,7 @@ class ValidationResult:
         check_results: Detailed check results
         errors: List of error messages
     """
+
     is_valid: bool
     contract_id: str
     profile: str
@@ -137,12 +142,9 @@ def griot_validate(
         ...     print(f"Valid: {result.is_valid}")
     """
     if not PREFECT_AVAILABLE:
-        raise ImportError(
-            "Prefect is required for this task. "
-            "Install with: pip install prefect"
-        )
+        raise ImportError("Prefect is required for this task. Install with: pip install prefect")
 
-    from griot_core.workers import LocalWorker, JobPayload, WorkerStatus
+    from griot_core.workers import JobPayload, LocalWorker
 
     logger = get_run_logger()
     logger.info(f"Validating contract: {contract_id}")
@@ -325,12 +327,14 @@ def griot_validate_async(
 
     # Submit job to registry
     url = f"{registry_url}/api/v1/jobs"
-    data = json.dumps({
-        "job_id": job_id,
-        "contract_id": contract_id,
-        "profile": profile,
-        "callback_url": callback_url,
-    }).encode("utf-8")
+    data = json.dumps(
+        {
+            "job_id": job_id,
+            "contract_id": contract_id,
+            "profile": profile,
+            "callback_url": callback_url,
+        }
+    ).encode("utf-8")
 
     req = urllib.request.Request(
         url,

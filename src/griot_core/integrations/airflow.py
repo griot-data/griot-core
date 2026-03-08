@@ -41,24 +41,28 @@ Example DAG:
             token=os.environ.get("GRIOT_SA_TOKEN"),
         )
 """
+
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 try:
     from airflow.models import BaseOperator
     from airflow.sensors.base import BaseSensorOperator
     from airflow.utils.context import Context
+
     AIRFLOW_AVAILABLE = True
 except ImportError:
     AIRFLOW_AVAILABLE = False
+
     # Create stub classes for type hints when Airflow not installed
     class BaseOperator:
         pass
+
     class BaseSensorOperator:
         pass
+
     class Context:
         pass
 
@@ -161,9 +165,10 @@ class GriotValidateOperator(BaseOperator):
             AirflowException: If validation fails and fail_on_invalid is True
         """
         import asyncio
+
         from airflow.exceptions import AirflowException
 
-        from griot_core.workers import LocalWorker, JobPayload, WorkerStatus
+        from griot_core.workers import JobPayload, LocalWorker, WorkerStatus
 
         self.log.info(f"Validating contract: {self.contract_id}")
         self.log.info(f"Profile: {self.profile}, Environment: {self.environment}")
@@ -229,15 +234,12 @@ class GriotValidateOperator(BaseOperator):
         # Handle failure
         if result.status != WorkerStatus.COMPLETED:
             if self.fail_on_invalid:
-                raise AirflowException(
-                    f"Validation failed: {result.errors}"
-                )
+                raise AirflowException(f"Validation failed: {result.errors}")
 
         if not result.is_valid:
             if self.fail_on_invalid:
                 raise AirflowException(
-                    f"Validation failed for contract {self.contract_id}. "
-                    f"Profile: {self.profile}"
+                    f"Validation failed for contract {self.contract_id}. Profile: {self.profile}"
                 )
             elif self.fail_on_critical:
                 # Check for critical failures
@@ -474,14 +476,15 @@ class GriotReportOperator(BaseOperator):
             self.log.info(f"Loading credentials from Airflow Connection: {self.griot_conn_id}")
             try:
                 from airflow.hooks.base import BaseHook
+
                 conn = BaseHook.get_connection(self.griot_conn_id)
 
                 # Registry URL: Use connection host or fall back to parameter
                 if conn.host:
                     # Handle both formats: "localhost:8000/api/v1" or "http://localhost:8000/api/v1"
                     conn_host = conn.host
-                    if not conn_host.startswith(('http://', 'https://')):
-                        conn_type = conn.conn_type or 'http'
+                    if not conn_host.startswith(("http://", "https://")):
+                        conn_type = conn.conn_type or "http"
                         registry_url = f"{conn_type}://{conn_host}"
                     else:
                         registry_url = conn_host
@@ -493,8 +496,8 @@ class GriotReportOperator(BaseOperator):
 
                 # Token/API key from connection extra
                 if conn.extra_dejson:
-                    token = token or conn.extra_dejson.get('token')
-                    api_key = api_key or conn.extra_dejson.get('api_key')
+                    token = token or conn.extra_dejson.get("token")
+                    api_key = api_key or conn.extra_dejson.get("api_key")
 
                 self.log.info(f"Loaded credentials from connection (client_id: {client_id[:8]}...)")
 
@@ -525,7 +528,9 @@ class GriotReportOperator(BaseOperator):
                 parser_kwargs["schema_mapping"] = self.schema_mapping
             elif registry_url and (token or api_key or client_id):
                 # Try to fetch contract from registry to derive mapping
-                self.log.info("No schema_mapping provided, attempting auto-discovery from contract...")
+                self.log.info(
+                    "No schema_mapping provided, attempting auto-discovery from contract..."
+                )
                 mapping = self._fetch_schema_mapping(
                     registry_url=registry_url,
                     client_id=client_id,
@@ -621,6 +626,7 @@ class GriotReportOperator(BaseOperator):
         """Try to fetch contract from registry and derive schema mapping."""
         try:
             from griot_core.reporting.reporter import RegistryReporter
+
             reporter = RegistryReporter(
                 registry_url=registry_url,
                 client_id=client_id,
@@ -717,7 +723,8 @@ class GriotValidateSensor(BaseSensorOperator):
             True if validation passes, False otherwise
         """
         import asyncio
-        from griot_core.workers import LocalWorker, JobPayload, WorkerStatus
+
+        from griot_core.workers import JobPayload, LocalWorker, WorkerStatus
 
         self.log.info(f"Checking validation for contract: {self.contract_id}")
 

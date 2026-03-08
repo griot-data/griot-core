@@ -4,6 +4,7 @@ Validation types and configuration.
 Defines types used by the validation engine for configuration
 and context.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -29,11 +30,14 @@ class ProfileConfig:
         timeout_override: Override default timeout
         sample_size_override: Override default sample size
     """
+
     name: str
     description: str = ""
     checks_include: List[str] = field(default_factory=lambda: ["all"])
     checks_exclude: List[str] = field(default_factory=list)
-    runtime_preference: List[Runtime] = field(default_factory=lambda: [Runtime.WASM, Runtime.CONTAINER])
+    runtime_preference: List[Runtime] = field(
+        default_factory=lambda: [Runtime.WASM, Runtime.CONTAINER]
+    )
     timeout_override: Optional[int] = None
     sample_size_override: Optional[int] = None
 
@@ -94,6 +98,7 @@ class ValidationOptions:
         dry_run: If True, don't actually run checks (just validate config)
         parallel_checks: Run checks in parallel where possible
     """
+
     profile: str = "default"
     environment: str = "production"
     sample_size: Optional[int] = None
@@ -122,6 +127,7 @@ class ValidationContext:
         environment: Current environment
         metadata: Additional metadata for the run
     """
+
     contract_id: str
     contract_version: str
     resolved_contract: Dict[str, Any]

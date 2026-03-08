@@ -3,6 +3,7 @@ Local dispatcher for orchestrated validation jobs (testing/development).
 
 Executes validation jobs locally for development and testing.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -11,15 +12,20 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from griot_core.orchestration.types import (
-    ContainerJobSpec,
-    DispatchResult,
-    WasmJobSpec,
-)
+try:
+    import httpx
+except ImportError:
+    httpx = None  # type: ignore[assignment]
+
 from griot_core.orchestration.dispatcher.base import (
     ComputeBackend,
     ComputeDispatcher,
     DispatcherConfig,
+)
+from griot_core.orchestration.types import (
+    ContainerJobSpec,
+    DispatchResult,
+    WasmJobSpec,
 )
 
 logger = logging.getLogger(__name__)
@@ -152,9 +158,7 @@ class LocalDispatcher(ComputeDispatcher):
             )
 
         except Exception as e:
-            logger.exception(
-                "Error dispatching local container check %s", spec.check.name
-            )
+            logger.exception("Error dispatching local container check %s", spec.check.name)
             return DispatchResult(
                 success=False,
                 job_id=spec.job_id,
@@ -163,9 +167,7 @@ class LocalDispatcher(ComputeDispatcher):
                 error=str(e),
             )
 
-    async def _execute_wasm_job(
-        self, spec: WasmJobSpec, invocation_id: str
-    ) -> dict[str, Any]:
+    async def _execute_wasm_job(self, spec: WasmJobSpec, invocation_id: str) -> dict[str, Any]:
         """
         Execute WASM job locally.
 
@@ -176,7 +178,6 @@ class LocalDispatcher(ComputeDispatcher):
         Returns:
             Execution result
         """
-        import httpx
 
         result = {
             "job_id": spec.job_id,
@@ -239,7 +240,6 @@ class LocalDispatcher(ComputeDispatcher):
         Returns:
             Execution result
         """
-        import httpx
 
         result = {
             "job_id": spec.job_id,
@@ -255,15 +255,13 @@ class LocalDispatcher(ComputeDispatcher):
         try:
             from griot_core.executors.container_runtime import (
                 ContainerRuntime,
-                ContainerConfig,
             )
 
             runtime = ContainerRuntime()
 
             if not runtime.is_available():
                 logger.warning(
-                    "Container runtime not available for check %s, "
-                    "returning mock result",
+                    "Container runtime not available for check %s, returning mock result",
                     spec.check.name,
                 )
                 result["success"] = True
@@ -274,7 +272,7 @@ class LocalDispatcher(ComputeDispatcher):
                 }
             else:
                 # Run the container
-                container_result = await runtime.run_check_container(
+                container_result = await runtime.run_check_container(  # type: ignore[attr-defined]
                     image=spec.image,
                     check_name=spec.check.name,
                     parameters=spec.check.parameters,
@@ -297,9 +295,7 @@ class LocalDispatcher(ComputeDispatcher):
             }
 
         except Exception as e:
-            logger.exception(
-                "Error executing local container check %s", spec.check.name
-            )
+            logger.exception("Error executing local container check %s", spec.check.name)
             result["error"] = str(e)
 
         finally:
@@ -311,9 +307,7 @@ class LocalDispatcher(ComputeDispatcher):
 
         return result
 
-    async def _post_callback(
-        self, callback_url: str, result: dict[str, Any], job_id: str
-    ) -> None:
+    async def _post_callback(self, callback_url: str, result: dict[str, Any], job_id: str) -> None:
         """
         POST results to callback URL.
 

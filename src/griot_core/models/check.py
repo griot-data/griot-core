@@ -5,6 +5,7 @@ Checks define validation rules that are executed against data.
 Each check specifies an executor URI that points to a WASM module
 or container image that performs the actual validation.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -21,6 +22,7 @@ class CheckCondition:
     Used to conditionally execute checks based on environment,
     profile, or other runtime parameters.
     """
+
     environment: Optional[List[str]] = None  # ["dev", "staging"]
     profile: Optional[List[str]] = None  # ["data_engineering", "privacy_audit"]
     tags: Optional[List[str]] = None  # Only run if data has these tags
@@ -53,6 +55,7 @@ class Check:
         when: Optional condition for when this check should run
         tags: Tags for categorizing and filtering checks
     """
+
     name: str
     description: str
     type: CheckType

@@ -4,6 +4,7 @@ Kubernetes dispatcher for orchestrated validation jobs.
 Dispatches WASM worker jobs and container checks as native K8s Jobs,
 avoiding Docker-in-Docker by spawning containers directly on K8s.
 """
+
 from __future__ import annotations
 
 import json
@@ -11,15 +12,15 @@ import logging
 import uuid
 from typing import Any
 
-from griot_core.orchestration.types import (
-    ContainerJobSpec,
-    DispatchResult,
-    WasmJobSpec,
-)
 from griot_core.orchestration.dispatcher.base import (
     ComputeBackend,
     ComputeDispatcher,
     DispatcherConfig,
+)
+from griot_core.orchestration.types import (
+    ContainerJobSpec,
+    DispatchResult,
+    WasmJobSpec,
 )
 
 logger = logging.getLogger(__name__)
@@ -87,7 +88,8 @@ class KubernetesDispatcher(ComputeDispatcher):
         """Get or create Kubernetes API clients."""
         if self._api is None:
             try:
-                from kubernetes import client, config as k8s_config
+                from kubernetes import client
+                from kubernetes import config as k8s_config
 
                 # Try in-cluster config first, fall back to kubeconfig
                 try:
@@ -182,9 +184,7 @@ class KubernetesDispatcher(ComputeDispatcher):
         }
 
         if self.service_account:
-            manifest["spec"]["template"]["spec"][
-                "serviceAccountName"
-            ] = self.service_account
+            manifest["spec"]["template"]["spec"]["serviceAccountName"] = self.service_account
 
         return manifest
 
@@ -278,9 +278,7 @@ class KubernetesDispatcher(ComputeDispatcher):
         }
 
         if self.service_account:
-            manifest["spec"]["template"]["spec"][
-                "serviceAccountName"
-            ] = self.service_account
+            manifest["spec"]["template"]["spec"]["serviceAccountName"] = self.service_account
 
         return manifest
 
@@ -383,9 +381,7 @@ class KubernetesDispatcher(ComputeDispatcher):
             )
 
         except Exception as e:
-            logger.exception(
-                "Error creating K8s container Job for check %s", spec.check.name
-            )
+            logger.exception("Error creating K8s container Job for check %s", spec.check.name)
             return DispatchResult(
                 success=False,
                 job_id=spec.job_id,
@@ -425,13 +421,9 @@ class KubernetesDispatcher(ComputeDispatcher):
                 "active": status.active or 0,
                 "succeeded": status.succeeded or 0,
                 "failed": status.failed or 0,
-                "start_time": (
-                    status.start_time.isoformat() if status.start_time else None
-                ),
+                "start_time": (status.start_time.isoformat() if status.start_time else None),
                 "completion_time": (
-                    status.completion_time.isoformat()
-                    if status.completion_time
-                    else None
+                    status.completion_time.isoformat() if status.completion_time else None
                 ),
                 "conditions": [
                     {

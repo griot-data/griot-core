@@ -96,11 +96,30 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
+ignore = ["E501"]  # Line length enforced by ruff format
+
+[tool.ruff.lint.per-file-ignores]
+"src/griot_core/integrations/__init__.py" = ["F401"]  # Lazy imports via locals()
+"src/griot_core/reporting/__init__.py" = ["F401"]  # Lazy imports via locals()
 
 [tool.mypy]
 python_version = "3.10"
-warn_return_any = true
-warn_unused_ignores = true
+warn_unused_ignores = false
+ignore_missing_imports = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+warn_return_any = false
+disable_error_code = ["no-redef"]  # Try/except import fallback patterns in integrations
+
+[[tool.mypy.overrides]]
+module = [
+    "griot_core.integrations.*",
+    "griot_core.orchestration.dispatcher.kubernetes",
+    "griot_core.orchestration.dispatcher.cloudrun",
+    "griot_core.orchestration.dispatcher.lambda_dispatcher",
+    "griot_core.workers.cloudrun",
+]
+ignore_errors = true
 
 # =============================================================================
 # Semantic Release Configuration

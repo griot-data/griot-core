@@ -4,6 +4,7 @@ AWS Lambda worker for serverless validation.
 Provides the Lambda handler function and worker implementation
 for running validation jobs on AWS Lambda.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -15,17 +16,17 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+from griot_core.executors import ExecutorRegistry, ExecutorRuntime
 from griot_core.models import Contract
 from griot_core.parsing import parse_contract_json
 from griot_core.validation import ValidationEngine, ValidationOptions
-from griot_core.executors import ExecutorRuntime, ExecutorRegistry
 
 from .base import (
+    JobPayload,
     Worker,
     WorkerConfig,
     WorkerResult,
     WorkerStatus,
-    JobPayload,
 )
 
 
@@ -69,7 +70,7 @@ class LambdaWorker(Worker):
             config = WorkerConfig(
                 worker_id=os.environ.get(
                     "GRIOT_WORKER_ID",
-                    os.environ.get("AWS_LAMBDA_FUNCTION_NAME", f"lambda-{uuid.uuid4().hex[:8]}")
+                    os.environ.get("AWS_LAMBDA_FUNCTION_NAME", f"lambda-{uuid.uuid4().hex[:8]}"),
                 ),
                 worker_type="lambda",
                 default_timeout=int(os.environ.get("GRIOT_DEFAULT_TIMEOUT", "300")),
@@ -137,10 +138,12 @@ class LambdaWorker(Worker):
         except Exception as e:
             return {
                 "statusCode": 500,
-                "body": json.dumps({
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                }),
+                "body": json.dumps(
+                    {
+                        "error": str(e),
+                        "error_type": type(e).__name__,
+                    }
+                ),
                 "headers": {
                     "Content-Type": "application/json",
                 },
@@ -295,6 +298,7 @@ class LambdaWorker(Worker):
         # Fetch from registry
         if self.config.registry_url:
             import urllib.request
+
             url = f"{self.config.registry_url}/api/v1/contracts/{contract_id}"
             if version:
                 url += f"?version={version}"
@@ -305,9 +309,7 @@ class LambdaWorker(Worker):
                 self._contracts_cache[cache_key] = contract
                 return contract
 
-        raise ValueError(
-            f"Contract {contract_id} not found and GRIOT_REGISTRY_URL not configured"
-        )
+        raise ValueError(f"Contract {contract_id} not found and GRIOT_REGISTRY_URL not configured")
 
     def _serialize_result(self, validation_result: Any) -> Dict[str, Any]:
         """Serialize validation result to dictionary."""
@@ -317,8 +319,12 @@ class LambdaWorker(Worker):
             "contract_version": validation_result.contract_version,
             "profile_used": validation_result.profile_used,
             "mode": validation_result.mode.value if validation_result.mode else None,
-            "started_at": validation_result.started_at.isoformat() if validation_result.started_at else None,
-            "completed_at": validation_result.completed_at.isoformat() if validation_result.completed_at else None,
+            "started_at": validation_result.started_at.isoformat()
+            if validation_result.started_at
+            else None,
+            "completed_at": validation_result.completed_at.isoformat()
+            if validation_result.completed_at
+            else None,
             "duration_ms": validation_result.duration_ms,
             "errors": validation_result.errors,
             "schema_results": [
@@ -358,6 +364,7 @@ class LambdaWorker(Worker):
 
         try:
             import urllib.request
+
             url = result.metadata["callback_url"]
             data = result.to_json().encode("utf-8")
 

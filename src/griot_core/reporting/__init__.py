@@ -11,6 +11,7 @@ Architecture:
         -> ToolValidationReport        (tool-agnostic intermediate)
         -> RegistryReporter            (push to Griot Registry API)
 """
+
 from __future__ import annotations
 
 __all__ = [
@@ -27,17 +28,19 @@ __all__ = [
 
 def __getattr__(name: str):
     """Lazy import reporting components."""
-    if name in ("ToolResultsParser", "ToolValidationReport", "SchemaTestResult",
-                "ToolCheckResult"):
-        from .base import ToolResultsParser, ToolValidationReport, SchemaTestResult, ToolCheckResult
+    if name in ("ToolResultsParser", "ToolValidationReport", "SchemaTestResult", "ToolCheckResult"):
+        from .base import SchemaTestResult, ToolCheckResult, ToolResultsParser, ToolValidationReport
+
         return locals()[name]
 
     if name in ("ParserRegistry", "get_default_parser_registry"):
         from .registry import ParserRegistry, get_default_parser_registry
+
         return locals()[name]
 
     if name in ("RegistryReporter", "ReportResult"):
         from .reporter import RegistryReporter, ReportResult
+
         return locals()[name]
 
     raise AttributeError(f"module 'griot_core.reporting' has no attribute '{name}'")

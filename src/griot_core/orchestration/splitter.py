@@ -8,6 +8,7 @@ by runtime type:
 
 This enables parallel execution without Docker-in-Docker.
 """
+
 from __future__ import annotations
 
 import logging
@@ -223,9 +224,7 @@ class JobSplitter:
             metadata=metadata,
         )
 
-    def _extract_checks_from_contract(
-        self, contract: Any, profile: str
-    ) -> list[CheckSpec]:
+    def _extract_checks_from_contract(self, contract: Any, profile: str) -> list[CheckSpec]:
         """
         Extract checks from a contract for the given profile.
 

@@ -3,6 +3,7 @@ Factory for creating compute dispatchers.
 
 Creates the appropriate dispatcher based on backend configuration.
 """
+
 from __future__ import annotations
 
 import logging
@@ -75,12 +76,8 @@ def create_dispatcher(
 
         return LambdaDispatcher(
             config,
-            wasm_function_name=kwargs.get(
-                "wasm_function_name", "griot-wasm-worker"
-            ),
-            container_function_prefix=kwargs.get(
-                "container_function_prefix", "griot-check-"
-            ),
+            wasm_function_name=kwargs.get("wasm_function_name", "griot-wasm-worker"),
+            container_function_prefix=kwargs.get("container_function_prefix", "griot-check-"),
         )
 
     elif backend == ComputeBackend.CLOUD_RUN:
@@ -143,15 +140,12 @@ def create_dispatcher_from_dict(
         backend = ComputeBackend(backend_str)
     except ValueError:
         raise ValueError(
-            f"Invalid backend: {backend_str}. "
-            f"Supported: {[b.value for b in ComputeBackend]}"
+            f"Invalid backend: {backend_str}. Supported: {[b.value for b in ComputeBackend]}"
         )
 
     config = DispatcherConfig(
         backend=backend,
-        wasm_worker_image=config_dict.get(
-            "wasm_worker_image", "griot/wasm-worker:latest"
-        ),
+        wasm_worker_image=config_dict.get("wasm_worker_image", "griot/wasm-worker:latest"),
         timeout_seconds=config_dict.get("timeout_seconds", 600),
         memory_mb=config_dict.get("memory_mb", 512),
         cpu_millicores=config_dict.get("cpu_millicores", 1000),

@@ -3,12 +3,14 @@ JSON parser for contracts and schemas.
 
 Parses JSON strings or dictionaries into griot-core dataclasses.
 """
+
 from __future__ import annotations
 
 import json
 from typing import Any, Dict
 
 from griot_core.models import Contract, Schema
+
 from .yaml_parser import _parse_contract_dict, _parse_schema_dict
 
 

@@ -5,6 +5,7 @@ The ValidationOrchestrator coordinates the execution of validation jobs
 by splitting them into WASM and container checks, dispatching them in
 parallel, and aggregating the results.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -12,18 +13,18 @@ import logging
 import uuid
 from typing import Any
 
-from griot_core.orchestration.types import (
-    AggregatedResult,
-    CheckSpec,
-    DispatchResult,
-    SplitJob,
-)
-from griot_core.orchestration.splitter import JobSplitter
 from griot_core.orchestration.aggregator import ResultAggregator
 from griot_core.orchestration.dispatcher import (
     ComputeDispatcher,
     DispatcherConfig,
     create_dispatcher,
+)
+from griot_core.orchestration.splitter import JobSplitter
+from griot_core.orchestration.types import (
+    AggregatedResult,
+    CheckSpec,
+    DispatchResult,
+    SplitJob,
 )
 
 logger = logging.getLogger(__name__)
@@ -97,12 +98,8 @@ class ValidationOrchestrator:
         """Get or create the compute dispatcher."""
         if self._dispatcher is None:
             if self._dispatcher_config is None:
-                raise ValueError(
-                    "Either dispatcher or dispatcher_config must be provided"
-                )
-            self._dispatcher = create_dispatcher(
-                self._dispatcher_config, **self._dispatcher_kwargs
-            )
+                raise ValueError("Either dispatcher or dispatcher_config must be provided")
+            self._dispatcher = create_dispatcher(self._dispatcher_config, **self._dispatcher_kwargs)
         return self._dispatcher
 
     async def validate(
@@ -171,9 +168,7 @@ class ValidationOrchestrator:
         failures = [r for r in dispatch_results if not r.success]
         if failures:
             for failure in failures:
-                logger.error(
-                    "Dispatch failed for %s: %s", failure.job_id, failure.error
-                )
+                logger.error("Dispatch failed for %s: %s", failure.job_id, failure.error)
 
         if wait_for_completion:
             # Wait for results via polling
@@ -284,15 +279,13 @@ class ValidationOrchestrator:
                         )
                     )
                 else:
-                    processed_results.append(result)
+                    processed_results.append(result)  # type: ignore[arg-type]
 
             return processed_results
 
         return []
 
-    async def _wait_for_completion(
-        self, job_id: str, timeout_seconds: int
-    ) -> AggregatedResult:
+    async def _wait_for_completion(self, job_id: str, timeout_seconds: int) -> AggregatedResult:
         """
         Wait for all job results via polling.
 

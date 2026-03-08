@@ -4,12 +4,12 @@ JSON Schema export for Griot schemas.
 Exports Griot Schema definitions to JSON Schema format for use
 in API validation, form generation, and IDE support.
 """
+
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from griot_core.models import Schema, Property, LogicalType
-
+from griot_core.models import LogicalType, Property, Schema
 
 # Mapping from Griot logical types to JSON Schema types
 LOGICAL_TYPE_TO_JSON_SCHEMA = {
@@ -174,9 +174,8 @@ class JSONSchemaExporter:
             JSON Schema property dictionary
         """
         # Get base type from logical type
-        prop_schema = LOGICAL_TYPE_TO_JSON_SCHEMA.get(
-            prop.logical_type,
-            {"type": "string"}
+        prop_schema: Dict[str, Any] = LOGICAL_TYPE_TO_JSON_SCHEMA.get(
+            prop.logical_type, {"type": "string"}
         ).copy()
 
         # Add description
@@ -201,7 +200,9 @@ class JSONSchemaExporter:
             if prop.constraints.partitioned:
                 prop_schema["x-griot-partitioned"] = True
                 if prop.constraints.partition_key_position is not None:
-                    prop_schema["x-griot-partition-position"] = prop.constraints.partition_key_position
+                    prop_schema["x-griot-partition-position"] = (
+                        prop.constraints.partition_key_position
+                    )
 
             if prop.constraints.is_pii:
                 prop_schema["x-griot-pii"] = True
@@ -239,6 +240,7 @@ class JSONSchemaExporter:
             # Try to extract length from VARCHAR(n) or CHAR(n)
             if "VARCHAR" in physical_type or "CHAR" in physical_type:
                 import re
+
                 match = re.search(r"\((\d+)\)", physical_type)
                 if match:
                     prop_schema["maxLength"] = int(match.group(1))
@@ -246,6 +248,7 @@ class JSONSchemaExporter:
         elif prop.logical_type == LogicalType.DECIMAL:
             # Try to extract precision from DECIMAL(p,s)
             import re
+
             match = re.search(r"DECIMAL\s*\((\d+)\s*,\s*(\d+)\)", physical_type)
             if match:
                 precision = int(match.group(1))
@@ -256,10 +259,7 @@ class JSONSchemaExporter:
                 prop_schema["minimum"] = -max_val
 
 
-def schema_to_json_schema(
-    schema: Schema,
-    **kwargs
-) -> Dict[str, Any]:
+def schema_to_json_schema(schema: Schema, **kwargs) -> Dict[str, Any]:
     """
     Convenience function to export a Schema to JSON Schema.
 

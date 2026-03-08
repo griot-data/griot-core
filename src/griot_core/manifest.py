@@ -5,6 +5,7 @@ Export contract metadata for AI/LLM consumption.
 Supports JSON-LD, Markdown, and LLM context formats.
 Uses Python stdlib only (no external dependencies).
 """
+
 from __future__ import annotations
 
 import json
@@ -153,9 +154,7 @@ def _export_markdown(schema: type[Schema] | Schema) -> str:
             props.append("CDE")
 
         props_str = ", ".join(props) if props else "-"
-        lines.append(
-            f"| `{field_name}` | {type_str} | {field_info.description} | {props_str} |"
-        )
+        lines.append(f"| `{field_name}` | {type_str} | {field_info.description} | {props_str} |")
 
     lines.append("")
 
@@ -233,8 +232,13 @@ def _export_llm_context(schema: type[Schema] | Schema) -> str:
                 metric = rule.get("metric", "unknown")
                 # Extract operator (mustBe, mustNotBe, etc.)
                 op_str = ""
-                for op_name in ["mustBe", "mustNotBe", "mustBeGreaterThan",
-                                "mustBeLessThan", "mustBeBetween"]:
+                for op_name in [
+                    "mustBe",
+                    "mustNotBe",
+                    "mustBeGreaterThan",
+                    "mustBeLessThan",
+                    "mustBeBetween",
+                ]:
                     if op_name in rule:
                         op_str = f" {op_name}={rule[op_name]}"
                         break

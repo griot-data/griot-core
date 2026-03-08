@@ -4,6 +4,7 @@ Griot Core Type Definitions
 Enums and type definitions for the Griot data contract system.
 Based on the Open Data Contract Standard (ODCS).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -112,6 +113,7 @@ class Severity(str, Enum):
     WARNING = "warning"
     INFO = "info"
 
+
 @dataclass
 class FieldValidationError:
     """Single field validation error."""
@@ -138,6 +140,7 @@ class FieldValidationError:
         loc = f"[row {self.row}]" if self.row is not None else ""
         return f"{self.field}{loc}: {self.message}"
 
+
 def _serialize_value(value: Any) -> Any:
     """Convert a value to a JSON-serializable format."""
     if value is None:
@@ -160,6 +163,7 @@ class QualityCheckType(str, Enum):
     - SQL: SQL-based validation queries
     - CUSTOM: Vendor-specific custom checks
     """
+
     LIBRARY = "library"
     TEXT = "text"
     SQL = "sql"
@@ -183,6 +187,7 @@ class QualityMetric(str, Enum):
     - ROW_COUNT: Total number of rows in the dataset
     - DUPLICATE_ROWS: Duplicate rows across specified columns (schema-level)
     """
+
     # Property-level metrics
     NULL_VALUES = "nullValues"
     MISSING_VALUES = "missingValues"
@@ -222,6 +227,7 @@ class QualityOperator(str, Enum):
     These operators define how to compare the calculated metric value
     against the specified threshold.
     """
+
     MUST_BE = "mustBe"
     MUST_NOT_BE = "mustNotBe"
     MUST_BE_GREATER_THAN = "mustBeGreaterThan"
@@ -290,6 +296,7 @@ class QualityUnit(str, Enum):
     - ROWS: Absolute count of rows
     - PERCENT: Percentage of total rows
     """
+
     ROWS = "rows"
     PERCENT = "percent"
 
@@ -361,7 +368,7 @@ class QualityRule:
         arguments: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Build a quality rule dictionary from typed parameters."""
-        rule: dict[str, Any] = {"id":rule_id,"metric": metric.value}
+        rule: dict[str, Any] = {"id": rule_id, "metric": metric.value}
 
         # Add operator
         if must_be is not None:
@@ -911,7 +918,7 @@ class PrivacyInfo:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
-        result = {
+        result: dict[str, Any] = {
             "is_pii": self.is_pii,
             "sensitivity": self.sensitivity.value,
         }
@@ -960,9 +967,7 @@ class PrivacyInfo:
 
         compliance_frameworks = []
         if "compliance_frameworks" in data:
-            compliance_frameworks = [
-                ComplianceFramework(f) for f in data["compliance_frameworks"]
-            ]
+            compliance_frameworks = [ComplianceFramework(f) for f in data["compliance_frameworks"]]
 
         return cls(
             is_pii=data.get("is_pii", False),
@@ -998,16 +1003,16 @@ class PrivacyViolation:
     detected_pii_type: PIIType | None = None
     """PII type that was detected (for undeclared PII)."""
 
-    sample_values: list[Any] = field(default_factory=list)
+    sample_values: list[Any] = field(default_factory=list)  # type: ignore[operator]
     """Sample values that triggered the violation."""
 
     recommendation: str | None = None
     """Recommended action to resolve the violation."""
 
-    compliance_impact: list[ComplianceFramework] = field(default_factory=list)
+    compliance_impact: list[ComplianceFramework] = field(default_factory=list)  # type: ignore[operator]
     """Compliance frameworks affected by this violation."""
 
-    details: dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)  # type: ignore[operator]
     """Additional violation details."""
 
 

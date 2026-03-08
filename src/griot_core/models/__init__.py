@@ -4,8 +4,43 @@ Griot Core Entity Models.
 This module provides dataclasses for all core entities in the Griot
 data contract system, including Schema, Contract, Property, and Check.
 """
+
 from __future__ import annotations
 
+from .check import Check, CheckCondition
+from .contract import (
+    ApprovalWorkflow,
+    AuditConfig,
+    AuthoritativeDefinition,
+    AutoCheckConfig,
+    ChangeManagement,
+    # Compliance configuration
+    ComplianceConfig,
+    # Main contract class
+    Contract,
+    # Description
+    ContractDescription,
+    CrossBorderConfig,
+    DataSubjectRight,
+    DataSubjectRights,
+    # Executor configuration
+    ExecutorConfig,
+    ExecutorProfile,
+    ExportControls,
+    # Governance configuration
+    GovernanceConfig,
+    LegalConfig,
+    Regulation,
+    RetentionPolicy,
+    ReviewConfig,
+    # Infrastructure
+    Server,
+    # SLA configuration
+    SLAConfig,
+    SupportChannel,
+    TeamConfig,
+    TeamMember,
+)
 from .enums import (
     Cardinality,
     CheckCategory,
@@ -22,42 +57,8 @@ from .enums import (
     Severity,
 )
 from .property import Property, PropertyConstraints, Relationship
-from .check import Check, CheckCondition
 from .schema import Schema
 from .schema_ref import SchemaRef
-from .contract import (
-    # Main contract class
-    Contract,
-    # Description
-    ContractDescription,
-    # Executor configuration
-    ExecutorConfig,
-    ExecutorProfile,
-    AutoCheckConfig,
-    # Compliance configuration
-    ComplianceConfig,
-    LegalConfig,
-    Regulation,
-    DataSubjectRights,
-    DataSubjectRight,
-    RetentionPolicy,
-    CrossBorderConfig,
-    AuditConfig,
-    ExportControls,
-    # SLA configuration
-    SLAConfig,
-    # Governance configuration
-    GovernanceConfig,
-    ReviewConfig,
-    ChangeManagement,
-    ApprovalWorkflow,
-    # Infrastructure
-    Server,
-    TeamConfig,
-    TeamMember,
-    SupportChannel,
-    AuthoritativeDefinition,
-)
 
 __all__ = [
     # Enums

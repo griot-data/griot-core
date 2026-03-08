@@ -4,6 +4,7 @@ Container runtime for executing container-based checks.
 Uses Podman or Docker to execute container images that receive
 Arrow IPC data and return CheckResult.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -12,17 +13,19 @@ import os
 import shutil
 import tempfile
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from griot_core.models import Check
+
 from .types import CheckResult, ExecutorSpec
 
 
 @dataclass
 class ContainerConfig:
     """Configuration for container execution."""
+
     runtime: str = "podman"  # "podman" or "docker"
     network_mode: str = "none"  # Disable network by default for security
     memory_limit: str = "512m"
@@ -34,6 +37,7 @@ class ContainerConfig:
 @dataclass
 class ContainerExecutionResult:
     """Result of container execution."""
+
     check_result: CheckResult
     execution_time_ms: float
     container_id: Optional[str] = None
@@ -44,16 +48,19 @@ class ContainerExecutionResult:
 
 class ContainerRuntimeNotFoundError(Exception):
     """Raised when container runtime is not available."""
+
     pass
 
 
 class ContainerExecutionError(Exception):
     """Raised when container execution fails."""
+
     pass
 
 
 class ContainerImageNotFoundError(Exception):
     """Raised when a container image cannot be found."""
+
     pass
 
 
@@ -192,7 +199,7 @@ class ContainerRuntime:
                         error=f"Container exited with code {process.returncode}: {stderr.decode()}",
                     ),
                     execution_time_ms=execution_time,
-                    exit_code=process.returncode,
+                    exit_code=process.returncode,  # type: ignore[arg-type]
                     stdout=stdout.decode(),
                     stderr=stderr.decode(),
                 )
@@ -251,7 +258,7 @@ class ContainerRuntime:
             # Check if image exists
             check_cmd = [self._runtime_path, "image", "exists", image]
             process = await asyncio.create_subprocess_exec(
-                *check_cmd,
+                *check_cmd,  # type: ignore[arg-type]
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL,
             )
@@ -262,16 +269,14 @@ class ContainerRuntime:
         # Pull the image
         pull_cmd = [self._runtime_path, "pull", image]
         process = await asyncio.create_subprocess_exec(
-            *pull_cmd,
+            *pull_cmd,  # type: ignore[arg-type]
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await process.communicate()
 
         if process.returncode != 0:
-            raise ContainerImageNotFoundError(
-                f"Failed to pull image {image}: {stderr.decode()}"
-            )
+            raise ContainerImageNotFoundError(f"Failed to pull image {image}: {stderr.decode()}")
 
     def _build_run_command(
         self,
@@ -285,12 +290,18 @@ class ContainerRuntime:
             self._runtime_path,
             "run",
             "--rm",  # Remove container after execution
-            "--network", self.config.network_mode,
-            "--memory", self.config.memory_limit,
-            "--cpus", str(self.config.cpu_limit),
-            "-v", f"{data_path}:/data/input.arrow:ro",
-            "-e", f"PARAMETERS={json.dumps(parameters)}",
-            "-e", f"TIMEOUT={timeout}",
+            "--network",
+            self.config.network_mode,
+            "--memory",
+            self.config.memory_limit,
+            "--cpus",
+            str(self.config.cpu_limit),
+            "-v",
+            f"{data_path}:/data/input.arrow:ro",
+            "-e",
+            f"PARAMETERS={json.dumps(parameters)}",
+            "-e",
+            f"TIMEOUT={timeout}",
         ]
 
         # Add security options
@@ -299,7 +310,7 @@ class ContainerRuntime:
 
         cmd.append(image)
 
-        return cmd
+        return cmd  # type: ignore[return-value]
 
     async def pull_image(self, image: str) -> bool:
         """

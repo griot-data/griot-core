@@ -5,6 +5,7 @@ Contracts are agreements about data assets (schemas). They can extend
 other contracts or templates to inherit configuration, overriding only
 what differs for the specific use case.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -26,6 +27,7 @@ class ContractDescription:
 
     Provides human-readable context about the contract's purpose and usage.
     """
+
     purpose: str = ""
     usage: str = ""
     limitations: str = ""
@@ -39,6 +41,7 @@ class ExecutorProfile:
     Different teams (data engineering, software engineering, etc.)
     can have different check configurations and runtime preferences.
     """
+
     description: str = ""
     checks_include: List[str] = field(default_factory=list)  # ["all"] or specific checks
     checks_exclude: List[str] = field(default_factory=list)
@@ -54,10 +57,11 @@ class AutoCheckConfig:
     Auto-checks are automatically created based on property constraints
     (nullable, unique, primary_key, required, pii_masking).
     """
+
     enabled: bool = True
-    include: List[str] = field(default_factory=lambda: [
-        "nullable", "unique", "primary_key", "required", "pii_masking"
-    ])
+    include: List[str] = field(
+        default_factory=lambda: ["nullable", "unique", "primary_key", "required", "pii_masking"]
+    )
     severity: Severity = Severity.CRITICAL
 
 
@@ -69,6 +73,7 @@ class ExecutorConfig:
     Defines default runtime settings, auto-check configuration,
     and profile-specific overrides.
     """
+
     default_runtime_preference: List[str] = field(default_factory=lambda: ["wasm", "container"])
     default_timeout: str = "300s"
     registry: str = "registry://executors"
@@ -79,6 +84,7 @@ class ExecutorConfig:
 @dataclass
 class DataSubjectRight:
     """Configuration for a data subject right (GDPR/CCPA)."""
+
     enabled: bool = False
     sla: str = "P30D"  # ISO 8601 duration
     endpoint: str = ""
@@ -89,6 +95,7 @@ class DataSubjectRight:
 @dataclass
 class DataSubjectRights:
     """Collection of data subject rights configurations."""
+
     access_request: DataSubjectRight = field(default_factory=DataSubjectRight)
     erasure_request: DataSubjectRight = field(default_factory=DataSubjectRight)
     portability_request: DataSubjectRight = field(default_factory=DataSubjectRight)
@@ -97,6 +104,7 @@ class DataSubjectRights:
 @dataclass
 class RetentionPolicy:
     """Data retention policy configuration."""
+
     period: str = "P7Y"  # ISO 8601 duration
     policy: str = "archive"  # delete | archive | anonymize
     exceptions: List[Dict[str, Any]] = field(default_factory=list)
@@ -106,6 +114,7 @@ class RetentionPolicy:
 @dataclass
 class CrossBorderConfig:
     """Cross-border data transfer configuration."""
+
     transfers_allowed: bool = False
     approved_countries: List[str] = field(default_factory=list)
     transfer_mechanisms: Dict[str, bool] = field(default_factory=dict)
@@ -115,6 +124,7 @@ class CrossBorderConfig:
 @dataclass
 class AuditConfig:
     """Audit logging configuration."""
+
     logging_required: bool = True
     log_retention: str = "P365D"
     logged_events: List[str] = field(default_factory=lambda: ["read", "write", "delete", "export"])
@@ -124,6 +134,7 @@ class AuditConfig:
 @dataclass
 class ExportControls:
     """Data export controls configuration."""
+
     bulk_download_allowed: bool = False
     api_access_allowed: bool = True
     rate_limit: str = "1000/hour"
@@ -133,6 +144,7 @@ class ExportControls:
 @dataclass
 class Regulation:
     """Regulatory compliance configuration."""
+
     name: str
     applicable: bool = True
     articles: List[Dict[str, Any]] = field(default_factory=list)
@@ -142,6 +154,7 @@ class Regulation:
 @dataclass
 class LegalConfig:
     """Legal and regulatory configuration."""
+
     jurisdiction: List[str] = field(default_factory=list)
     legal_basis: str = "legitimate_interest"
     data_controller: str = ""
@@ -157,6 +170,7 @@ class ComplianceConfig:
     Covers data classification, legal requirements, data subject rights,
     retention, cross-border transfers, audit, and export controls.
     """
+
     classification: str = "internal"  # public | internal | confidential | restricted
     legal: LegalConfig = field(default_factory=LegalConfig)
     data_subject_rights: DataSubjectRights = field(default_factory=DataSubjectRights)
@@ -173,6 +187,7 @@ class SLAConfig:
 
     Defines freshness, availability, volume, and quality targets.
     """
+
     freshness_max_age: str = "24h"
     freshness_column: str = ""
     availability_schedule: str = "00:00-23:59 UTC"
@@ -187,6 +202,7 @@ class SLAConfig:
 @dataclass
 class ReviewConfig:
     """Governance review configuration."""
+
     cadence: str = "quarterly"  # monthly | quarterly | annually
     last_review: Optional[datetime] = None
     next_review: Optional[datetime] = None
@@ -196,6 +212,7 @@ class ReviewConfig:
 @dataclass
 class ChangeManagement:
     """Change management configuration."""
+
     breaking_change_notice: str = "P30D"  # ISO 8601 duration
     deprecation_notice: str = "P90D"
     migration_support: bool = True
@@ -204,6 +221,7 @@ class ChangeManagement:
 @dataclass
 class ApprovalWorkflow:
     """Approval workflow for different change types."""
+
     schema_changes: List[str] = field(default_factory=list)
     check_changes: List[str] = field(default_factory=list)
     compliance_changes: List[str] = field(default_factory=list)
@@ -216,6 +234,7 @@ class GovernanceConfig:
 
     Covers review schedules, change management, and approval workflows.
     """
+
     review: ReviewConfig = field(default_factory=ReviewConfig)
     change_management: ChangeManagement = field(default_factory=ChangeManagement)
     approval_workflow: ApprovalWorkflow = field(default_factory=ApprovalWorkflow)
@@ -228,6 +247,7 @@ class Server:
 
     Defines where the data lives and how to connect to it.
     """
+
     name: str
     type: str  # bigquery | snowflake | postgres | s3 | etc.
     environment: str  # prod | staging | dev
@@ -238,6 +258,7 @@ class Server:
 @dataclass
 class TeamMember:
     """A team member."""
+
     email: str
     role: str = "member"
 
@@ -249,6 +270,7 @@ class TeamConfig:
 
     Defines who is responsible for the contract.
     """
+
     name: str = ""
     description: str = ""
     members: List[str] = field(default_factory=list)
@@ -261,6 +283,7 @@ class SupportChannel:
 
     Defines how to get help with this contract.
     """
+
     type: str  # slack | email | jira | pagerduty
     contact: str
 
@@ -268,6 +291,7 @@ class SupportChannel:
 @dataclass
 class AuthoritativeDefinition:
     """Reference to an authoritative definition."""
+
     type: str  # canonical | reference
     url: str
     description: str = ""
@@ -305,6 +329,7 @@ class Contract:
         team: Team configuration
         support: Support channels
     """
+
     # Identity
     api_version: str = "v1.0.0"
     kind: str = "DataContract"

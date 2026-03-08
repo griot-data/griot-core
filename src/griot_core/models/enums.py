@@ -4,6 +4,7 @@ Enums for the Griot data contract system.
 This module defines all enumeration types used throughout griot-core,
 including statuses, types, severities, and compliance frameworks.
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -11,6 +12,7 @@ from enum import Enum
 
 class SchemaStatus(str, Enum):
     """Status of a schema in its lifecycle."""
+
     DRAFT = "draft"
     PENDING_REVIEW = "pending_review"
     ACTIVE = "active"
@@ -19,6 +21,7 @@ class SchemaStatus(str, Enum):
 
 class ContractStatus(str, Enum):
     """Status of a data contract in its lifecycle."""
+
     DRAFT = "draft"
     PENDING_REVIEW = "pending_review"
     ACTIVE = "active"
@@ -29,6 +32,7 @@ class ContractStatus(str, Enum):
 
 class LogicalType(str, Enum):
     """Logical data types for schema properties."""
+
     STRING = "string"
     INTEGER = "integer"
     DECIMAL = "decimal"
@@ -41,6 +45,7 @@ class LogicalType(str, Enum):
 
 class PIIType(str, Enum):
     """Types of Personally Identifiable Information."""
+
     NAME = "name"
     EMAIL = "email"
     PHONE = "phone"
@@ -61,6 +66,7 @@ class PIIType(str, Enum):
 
 class CheckType(str, Enum):
     """Types of validation checks."""
+
     DATA_QUALITY = "data_quality"
     PRIVACY = "privacy"
     SCHEMA = "schema"
@@ -68,6 +74,7 @@ class CheckType(str, Enum):
 
 class CheckCategory(str, Enum):
     """Specific check categories that map to dbt test types."""
+
     NOT_NULL = "not_null"
     UNIQUE = "unique"
     ACCEPTED_VALUES = "accepted_values"
@@ -82,6 +89,7 @@ class CheckCategory(str, Enum):
 
 class Severity(str, Enum):
     """Severity levels for checks and alerts."""
+
     CRITICAL = "critical"
     WARNING = "warning"
     INFO = "info"
@@ -89,18 +97,21 @@ class Severity(str, Enum):
 
 class Runtime(str, Enum):
     """Executor runtime types."""
+
     WASM = "wasm"
     CONTAINER = "container"
 
 
 class RelationshipType(str, Enum):
     """Types of relationships between properties/tables."""
+
     FOREIGN_KEY = "foreign_key"
     REFERENCES = "references"
 
 
 class Cardinality(str, Enum):
     """Cardinality of relationships."""
+
     ONE_TO_ONE = "one_to_one"
     ONE_TO_MANY = "one_to_many"
     MANY_TO_ONE = "many_to_one"
@@ -109,6 +120,7 @@ class Cardinality(str, Enum):
 
 class MaskingStrategy(str, Enum):
     """Strategies for masking sensitive data."""
+
     NONE = "none"
     REDACT = "redact"
     HASH = "hash"
@@ -120,6 +132,7 @@ class MaskingStrategy(str, Enum):
 
 class Sensitivity(str, Enum):
     """Data sensitivity classification levels."""
+
     PUBLIC = "public"
     INTERNAL = "internal"
     CONFIDENTIAL = "confidential"
@@ -128,6 +141,7 @@ class Sensitivity(str, Enum):
 
 class ComplianceFramework(str, Enum):
     """Regulatory compliance frameworks."""
+
     GDPR = "gdpr"
     CCPA = "ccpa"
     HIPAA = "hipaa"

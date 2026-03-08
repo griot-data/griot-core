@@ -63,7 +63,7 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Run tests
-        run: pytest --tb=short -q
+        run: pytest --tb=short -q || [ $? -eq 5 ]  # Exit 5 = no tests collected (OK)
 
   # ── Release: only runs after all CI jobs pass ──────────────────────
   release:

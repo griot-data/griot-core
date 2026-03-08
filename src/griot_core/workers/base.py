@@ -3,6 +3,7 @@ Base worker types and protocols.
 
 Defines the common interface for all worker implementations.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,6 +16,7 @@ from typing import Any, Dict, List, Optional, Protocol
 
 class WorkerStatus(str, Enum):
     """Status of a worker execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -42,6 +44,7 @@ class JobPayload:
         timeout_seconds: Maximum execution time
         metadata: Additional job metadata
     """
+
     job_id: str
     contract_id: str
     contract_version: Optional[str] = None
@@ -55,7 +58,7 @@ class JobPayload:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        data = {
+        data: Dict[str, Any] = {
             "job_id": self.job_id,
             "contract_id": self.contract_id,
             "contract_version": self.contract_version,
@@ -115,6 +118,7 @@ class WorkerResult:
         worker_type: Type of worker (local, lambda, k8s, cloudrun)
         metadata: Additional result metadata
     """
+
     job_id: str
     status: WorkerStatus
     is_valid: bool = False
@@ -187,6 +191,7 @@ class WorkerConfig:
         callback_enabled: Whether to report results via callback
         extra_options: Additional worker-specific options
     """
+
     worker_id: str
     worker_type: str = "local"
     max_concurrent_jobs: int = 1

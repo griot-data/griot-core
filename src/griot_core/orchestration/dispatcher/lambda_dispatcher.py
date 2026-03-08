@@ -4,21 +4,22 @@ AWS Lambda dispatcher for orchestrated validation jobs.
 Dispatches WASM worker jobs and container checks to Lambda functions.
 Container checks use Lambda container image support.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 from typing import Any
 
-from griot_core.orchestration.types import (
-    ContainerJobSpec,
-    DispatchResult,
-    WasmJobSpec,
-)
 from griot_core.orchestration.dispatcher.base import (
     ComputeBackend,
     ComputeDispatcher,
     DispatcherConfig,
+)
+from griot_core.orchestration.types import (
+    ContainerJobSpec,
+    DispatchResult,
+    WasmJobSpec,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,8 +84,7 @@ class LambdaDispatcher(ComputeDispatcher):
                 self._client = boto3.client("lambda")
             except ImportError:
                 raise RuntimeError(
-                    "boto3 is required for Lambda dispatcher. "
-                    "Install with: pip install boto3"
+                    "boto3 is required for Lambda dispatcher. Install with: pip install boto3"
                 )
         return self._client
 
@@ -217,9 +217,7 @@ class LambdaDispatcher(ComputeDispatcher):
                 )
 
         except Exception as e:
-            logger.exception(
-                "Error dispatching container check %s to Lambda", spec.check.name
-            )
+            logger.exception("Error dispatching container check %s to Lambda", spec.check.name)
             return DispatchResult(
                 success=False,
                 job_id=spec.job_id,

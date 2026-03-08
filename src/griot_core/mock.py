@@ -4,13 +4,13 @@ Griot Core Mock Data Generator
 Generate synthetic data conforming to contract constraints.
 Uses Python stdlib only (no external dependencies).
 """
+
 from __future__ import annotations
 
 import random
 import string
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
-from uuid import uuid4
 
 from griot_core.types import DataType
 
@@ -107,9 +107,7 @@ def generate_mock_data(
 
     result: list[dict[str, Any]] = []
     seen_unique: dict[str, set[Any]] = {
-        name: set()
-        for name, info in fields.items()
-        if info.unique or info.primary_key
+        name: set() for name, info in fields.items() if info.unique or info.primary_key
     }
 
     for row_idx in range(rows):

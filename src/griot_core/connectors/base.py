@@ -4,6 +4,7 @@ Base connector protocol and types.
 Defines the DataConnector protocol that all connectors must implement.
 Connectors return data in Arrow IPC format, never as DataFrames.
 """
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -16,6 +17,7 @@ from griot_core.models import Schema
 
 class ConnectorType(str, Enum):
     """Types of data source connectors."""
+
     SNOWFLAKE = "snowflake"
     BIGQUERY = "bigquery"
     POSTGRES = "postgres"
@@ -46,6 +48,7 @@ class ConnectorConfig:
         ssl_enabled: Whether to use SSL
         extra_options: Additional connector-specific options
     """
+
     connector_type: ConnectorType
     connection_params: Dict[str, Any] = field(default_factory=dict)
     timeout_seconds: int = 30
@@ -66,6 +69,7 @@ class ConnectionTestResult:
         server_version: Database server version if available
         errors: List of error messages if failed
     """
+
     success: bool
     message: str = ""
     latency_ms: Optional[float] = None
@@ -86,6 +90,7 @@ class FetchResult:
         truncated: Whether the data was truncated (sample_size applied)
         warnings: Any warnings during fetch
     """
+
     data: bytes  # Arrow IPC format
     row_count: int
     byte_size: int

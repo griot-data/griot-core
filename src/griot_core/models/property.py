@@ -4,6 +4,7 @@ Property model for schema columns/fields.
 Properties represent individual columns or fields in a schema,
 with unified constraints covering data integrity, partitioning, and privacy.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -19,6 +20,7 @@ class PropertyConstraints:
 
     Covers data integrity, partitioning, and privacy constraints.
     """
+
     # Data Integrity
     primary_key: bool = False
     required: bool = False
@@ -43,6 +45,7 @@ class Relationship:
 
     Used for foreign keys and other references between schemas.
     """
+
     to: str  # Format: "schema_name/column_name" e.g., "hr.departments/department_id"
     type: RelationshipType
     cardinality: Cardinality
@@ -67,6 +70,7 @@ class Property:
         constraints: Data integrity, partitioning, and privacy constraints
         relationships: Relationships to other properties/tables
     """
+
     id: str
     name: str
     logical_type: LogicalType

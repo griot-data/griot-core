@@ -7,6 +7,7 @@ embedding inline schema definitions. This enables:
 - Schema reuse across multiple contracts
 - Independent versioning
 """
+
 from __future__ import annotations
 
 import re
@@ -157,4 +158,6 @@ class SchemaRef:
 
     def __repr__(self) -> str:
         """Debug representation."""
-        return f"SchemaRef(schema_id={self.schema_id!r}, version={self.version!r}, uri={self.uri!r})"
+        return (
+            f"SchemaRef(schema_id={self.schema_id!r}, version={self.version!r}, uri={self.uri!r})"
+        )

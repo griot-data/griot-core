@@ -7,6 +7,7 @@ checks sequentially using the embedded WASM runtime.
 
 No Docker/Podman needed - WASM modules run in-process.
 """
+
 from __future__ import annotations
 
 import json
@@ -122,7 +123,7 @@ class WasmWorker:
         if self._wasm_runtime is None:
             from griot_core.executors.wasm_runtime import WasmRuntime
 
-            self._wasm_runtime = WasmRuntime(cache_dir=self.wasm_cache_dir)
+            self._wasm_runtime = WasmRuntime(cache_dir=self.wasm_cache_dir)  # type: ignore[assignment]
         return self._wasm_runtime
 
     async def run(self) -> WasmWorkerResult:
@@ -163,9 +164,7 @@ class WasmWorker:
         result = await self.execute_wasm_checks_from_dict(spec_dict)
 
         # POST results to callback URL
-        callback_url = spec_dict.get("callback_url") or os.environ.get(
-            "GRIOT_CALLBACK_URL"
-        )
+        callback_url = spec_dict.get("callback_url") or os.environ.get("GRIOT_CALLBACK_URL")
         if callback_url:
             await self._post_callback(callback_url, result)
 
@@ -181,11 +180,9 @@ class WasmWorker:
         Returns:
             Result dictionary
         """
-        return await self.execute_wasm_checks_from_dict(spec.to_dict())
+        return await self.execute_wasm_checks_from_dict(spec.to_dict())  # type: ignore[return-value]
 
-    async def execute_wasm_checks_from_dict(
-        self, spec_dict: dict[str, Any]
-    ) -> WasmWorkerResult:
+    async def execute_wasm_checks_from_dict(self, spec_dict: dict[str, Any]) -> WasmWorkerResult:
         """
         Execute WASM checks from a spec dictionary.
 
@@ -362,7 +359,7 @@ class WasmWorker:
 
         if "http" in data_reference or "https" in data_reference:
             url = data_reference.get("http") or data_reference.get("https")
-            return await self._fetch_from_http(url)
+            return await self._fetch_from_http(url)  # type: ignore[arg-type]
 
         if "file" in data_reference:
             path = Path(data_reference["file"])
@@ -422,9 +419,7 @@ class WasmWorker:
             response.raise_for_status()
             return response.content
 
-    async def _post_callback(
-        self, callback_url: str, result: WasmWorkerResult
-    ) -> None:
+    async def _post_callback(self, callback_url: str, result: WasmWorkerResult) -> None:
         """
         POST results to callback URL.
 
@@ -451,14 +446,11 @@ class WasmWorker:
                         response.text[:100],
                     )
         except Exception as e:
-            logger.error(
-                "Error posting callback for job %s: %s", result.job_id, e
-            )
+            logger.error("Error posting callback for job %s: %s", result.job_id, e)
 
 
 async def main():
     """Entry point for WASM worker container."""
-    import asyncio
 
     logging.basicConfig(
         level=logging.INFO,

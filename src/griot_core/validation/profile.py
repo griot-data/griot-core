@@ -4,10 +4,11 @@ Profile resolver for validation execution.
 Resolves execution profiles to determine which checks to run
 and with what configuration.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from griot_core.models import Check, Contract, Schema
 from griot_core.models.enums import CheckType, Runtime, Severity
@@ -20,6 +21,7 @@ class ResolvedCheck:
 
     Contains all information needed to execute the check.
     """
+
     check: Check
     source: str  # "contract" or schema ID
     auto_generated: bool = False
@@ -33,6 +35,7 @@ class ResolvedProfile:
 
     Contains the checks to run and runtime preferences.
     """
+
     name: str
     description: str
     checks: List[ResolvedCheck]
@@ -139,21 +142,25 @@ class ProfileResolver:
         # Add contract-level checks
         for check in contract.checks:
             if self._should_include_check(check, profile_config, environment):
-                all_checks.append(ResolvedCheck(
-                    check=check,
-                    source="contract",
-                    auto_generated=False,
-                ))
+                all_checks.append(
+                    ResolvedCheck(
+                        check=check,
+                        source="contract",
+                        auto_generated=False,
+                    )
+                )
 
         # Add schema-level checks
         for schema in contract.inline_schemas:
             for check in schema.checks:
                 if self._should_include_check(check, profile_config, environment):
-                    all_checks.append(ResolvedCheck(
-                        check=check,
-                        source=schema.id,
-                        auto_generated=False,
-                    ))
+                    all_checks.append(
+                        ResolvedCheck(
+                            check=check,
+                            source=schema.id,
+                            auto_generated=False,
+                        )
+                    )
 
             # Generate auto checks from constraints
             if self._auto_checks_enabled and self._should_include_auto_checks(profile_config):
@@ -173,11 +180,7 @@ class ProfileResolver:
             fail_fast=profile_config.get("fail_fast", False),
         )
 
-    def _get_profile_config(
-        self,
-        contract: Contract,
-        profile_name: str
-    ) -> Dict[str, Any]:
+    def _get_profile_config(self, contract: Contract, profile_name: str) -> Dict[str, Any]:
         """Get profile configuration from contract or defaults."""
         # Check contract executors config
         if contract.executors and contract.executors.profiles:
@@ -198,10 +201,7 @@ class ProfileResolver:
         return self.DEFAULT_PROFILES["default"].copy()
 
     def _should_include_check(
-        self,
-        check: Check,
-        profile_config: Dict[str, Any],
-        environment: str
+        self, check: Check, profile_config: Dict[str, Any], environment: str
     ) -> bool:
         """Determine if a check should be included based on profile and conditions."""
         includes = profile_config.get("checks_include", ["all"])
@@ -242,17 +242,15 @@ class ProfileResolver:
         """Check if auto checks should be included."""
         includes = profile_config.get("checks_include", [])
         return (
-            "all" in includes or
-            "auto:constraints" in includes or
-            "auto:pii_masking" in includes or
-            "auto:nullable" in includes or
-            "auto:unique" in includes
+            "all" in includes
+            or "auto:constraints" in includes
+            or "auto:pii_masking" in includes
+            or "auto:nullable" in includes
+            or "auto:unique" in includes
         )
 
     def _generate_auto_checks(
-        self,
-        schema: Schema,
-        profile_config: Dict[str, Any]
+        self, schema: Schema, profile_config: Dict[str, Any]
     ) -> List[ResolvedCheck]:
         """Generate auto checks from schema property constraints."""
         auto_checks: List[ResolvedCheck] = []
@@ -263,63 +261,77 @@ class ProfileResolver:
 
             # Nullable check (required or not nullable)
             if constraints.required or not constraints.nullable:
-                if "all" in includes or "auto:constraints" in includes or "auto:nullable" in includes:
-                    auto_checks.append(self._create_auto_check(
-                        schema_id=schema.id,
-                        check_name=f"auto_null_check_{prop.name}",
-                        check_type=CheckType.DATA_QUALITY,
-                        executor="registry://executors/null-check@1.0",
-                        parameters={"column": prop.name, "threshold": 0, "operator": "eq"},
-                        description=f"Auto-generated: {prop.name} must not be null",
-                    ))
+                if (
+                    "all" in includes
+                    or "auto:constraints" in includes
+                    or "auto:nullable" in includes
+                ):
+                    auto_checks.append(
+                        self._create_auto_check(
+                            schema_id=schema.id,
+                            check_name=f"auto_null_check_{prop.name}",
+                            check_type=CheckType.DATA_QUALITY,
+                            executor="registry://executors/null-check@1.0",
+                            parameters={"column": prop.name, "threshold": 0, "operator": "eq"},
+                            description=f"Auto-generated: {prop.name} must not be null",
+                        )
+                    )
 
             # Unique check
             if constraints.unique:
                 if "all" in includes or "auto:constraints" in includes or "auto:unique" in includes:
-                    auto_checks.append(self._create_auto_check(
-                        schema_id=schema.id,
-                        check_name=f"auto_unique_check_{prop.name}",
-                        check_type=CheckType.DATA_QUALITY,
-                        executor="registry://executors/unique-check@1.0",
-                        parameters={"column": prop.name, "threshold": 0},
-                        description=f"Auto-generated: {prop.name} must be unique",
-                    ))
+                    auto_checks.append(
+                        self._create_auto_check(
+                            schema_id=schema.id,
+                            check_name=f"auto_unique_check_{prop.name}",
+                            check_type=CheckType.DATA_QUALITY,
+                            executor="registry://executors/unique-check@1.0",
+                            parameters={"column": prop.name, "threshold": 0},
+                            description=f"Auto-generated: {prop.name} must be unique",
+                        )
+                    )
 
             # Primary key check (combines null + unique)
             if constraints.primary_key:
                 if "all" in includes or "auto:constraints" in includes:
-                    auto_checks.append(self._create_auto_check(
-                        schema_id=schema.id,
-                        check_name=f"auto_pk_null_{prop.name}",
-                        check_type=CheckType.DATA_QUALITY,
-                        executor="registry://executors/null-check@1.0",
-                        parameters={"column": prop.name, "threshold": 0, "operator": "eq"},
-                        description=f"Auto-generated: Primary key {prop.name} must not be null",
-                        severity=Severity.CRITICAL,
-                    ))
-                    auto_checks.append(self._create_auto_check(
-                        schema_id=schema.id,
-                        check_name=f"auto_pk_unique_{prop.name}",
-                        check_type=CheckType.DATA_QUALITY,
-                        executor="registry://executors/unique-check@1.0",
-                        parameters={"column": prop.name, "threshold": 0},
-                        description=f"Auto-generated: Primary key {prop.name} must be unique",
-                        severity=Severity.CRITICAL,
-                    ))
+                    auto_checks.append(
+                        self._create_auto_check(
+                            schema_id=schema.id,
+                            check_name=f"auto_pk_null_{prop.name}",
+                            check_type=CheckType.DATA_QUALITY,
+                            executor="registry://executors/null-check@1.0",
+                            parameters={"column": prop.name, "threshold": 0, "operator": "eq"},
+                            description=f"Auto-generated: Primary key {prop.name} must not be null",
+                            severity=Severity.CRITICAL,
+                        )
+                    )
+                    auto_checks.append(
+                        self._create_auto_check(
+                            schema_id=schema.id,
+                            check_name=f"auto_pk_unique_{prop.name}",
+                            check_type=CheckType.DATA_QUALITY,
+                            executor="registry://executors/unique-check@1.0",
+                            parameters={"column": prop.name, "threshold": 0},
+                            description=f"Auto-generated: Primary key {prop.name} must be unique",
+                            severity=Severity.CRITICAL,
+                        )
+                    )
 
             # PII masking check
             if constraints.is_pii:
                 if "all" in includes or "auto:pii_masking" in includes:
                     pii_type = constraints.pii_type.value if constraints.pii_type else "unknown"
-                    auto_checks.append(self._create_auto_check(
-                        schema_id=schema.id,
-                        check_name=f"auto_pii_masking_{prop.name}",
-                        check_type=CheckType.PRIVACY,
-                        executor="registry://executors/masking-check@1.0",
-                        parameters={"column": prop.name, "pii_type": pii_type},
-                        description=f"Auto-generated: PII field {prop.name} should be masked",
-                        severity=Severity.WARNING,
-                    ))
+                    auto_checks.append(
+                        self._create_auto_check(
+                            schema_id=schema.id,
+                            check_name=f"auto_pii_masking_{prop.name}",
+                            check_type=CheckType.PRIVACY,
+                            executor="registry://executors/masking-check@1.0",
+                            parameters={"column": prop.name, "pii_type": pii_type},
+                            description=f"Auto-generated: PII field {prop.name} should be masked",
+                            severity=Severity.WARNING,
+                        )
+                    )
 
         return auto_checks
 
@@ -349,10 +361,7 @@ class ProfileResolver:
             auto_generated=True,
         )
 
-    def _resolve_runtime_preference(
-        self,
-        profile_config: Dict[str, Any]
-    ) -> List[Runtime]:
+    def _resolve_runtime_preference(self, profile_config: Dict[str, Any]) -> List[Runtime]:
         """Resolve runtime preference from profile config."""
         prefs = profile_config.get("runtime_preference", ["wasm", "container"])
         result = []
